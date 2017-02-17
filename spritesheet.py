@@ -136,3 +136,8 @@ class BinMap(object):
         nw = arr[(i-1)%w][(j-1)%h]
         sw = arr[(i+1)%w][(j-1)%h]
         return arr[i][j],[nw,n,ne,w_,e,sw,s,se]
+
+    def __iter__(self):
+        for i,row in enumerate(self.arr):
+            for j,val in enumerate(row):
+                yield self.get_val_and_neighbours(i,j)
