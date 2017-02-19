@@ -16,6 +16,10 @@ EARTH_DENSITY = 0.8
 
 ENTITIES_SPRITES = "critters.png"
 
+GRASS_GROWTH_RATE = 0.01
+N_CRITTERS = 16
+N_GRASS = 50
+
 class Critter(Entity):
     clazz = 'critter'
 
@@ -33,17 +37,27 @@ class Critter(Entity):
 
 class Grass(Entity):
     clazz = 'grass'
+
+    def __init__(self,x,y):
+        super(Grass,self).__init__(x,y)
+        self.growth = 0
     
     def update(self):
-        pass
+        if random.random()<GRASS_GROWTH_RATE:
+            self.growth = min(self.growth+1,3)
 
 class Grass_Graphic(GraphicEntity):
     def __init__(self,x,y,entity):
         super(Grass_Graphic,self).__init__(x,y,entity)
-        self.anim = SpriteStripAnim(ENTITIES_SPRITES,(3*SIZE_ANIM,0*SIZE_ANIM,SIZE_ANIM,SIZE_ANIM),1,loop=True,frames=6)
+        self.anims = {
+            0:SpriteStripAnim(ENTITIES_SPRITES,(1*SIZE_ANIM,0*SIZE_ANIM,SIZE_ANIM,SIZE_ANIM),1,loop=True,frames=6),
+            1:SpriteStripAnim(ENTITIES_SPRITES,(2*SIZE_ANIM,0*SIZE_ANIM,SIZE_ANIM,SIZE_ANIM),1,loop=True,frames=6),
+            2:SpriteStripAnim(ENTITIES_SPRITES,(3*SIZE_ANIM,0*SIZE_ANIM,SIZE_ANIM,SIZE_ANIM),1,loop=True,frames=6),
+            3:SpriteStripAnim(ENTITIES_SPRITES,(4*SIZE_ANIM,0*SIZE_ANIM,SIZE_ANIM,SIZE_ANIM),1,loop=True,frames=6)
+            }
 
     def get_anim(self):
-        return self.anim
+        return self.anims[self.entity.growth]
 
 class Critter_Graphic(GraphicEntity):
     def __init__(self,x,y,entity):
@@ -64,24 +78,6 @@ graphic_store = {
     'critter':Critter_Graphic
 }
 
-class AnimsStore(object):
-    @staticmethod   
-    def get_anim(clazz):
-        if clazz == 'critter':
-            return {
-                0:SpriteStripAnim(ENTITIES_SPRITES,(5*SIZE_ANIM,3*SIZE_ANIM,SIZE_ANIM,SIZE_ANIM),4,loop=True,frames=6),
-                1:SpriteStripAnim(ENTITIES_SPRITES,(5*SIZE_ANIM,4*SIZE_ANIM,SIZE_ANIM,SIZE_ANIM),4,loop=True,frames=6),
-                2:SpriteStripAnim(ENTITIES_SPRITES,(5*SIZE_ANIM,5*SIZE_ANIM,SIZE_ANIM,SIZE_ANIM),4,loop=True,frames=6),
-                3:SpriteStripAnim(ENTITIES_SPRITES,(5*SIZE_ANIM,6*SIZE_ANIM,SIZE_ANIM,SIZE_ANIM),4,loop=True,frames=6),
-                }
-        elif clazz == 'grass':
-            return {
-                0:SpriteStripAnim(ENTITIES_SPRITES,(3*SIZE_ANIM,0*SIZE_ANIM,SIZE_ANIM,SIZE_ANIM),1,loop=True,frames=6),
-                1:SpriteStripAnim(ENTITIES_SPRITES,(3*SIZE_ANIM,0*SIZE_ANIM,SIZE_ANIM,SIZE_ANIM),1,loop=True,frames=6),
-                2:SpriteStripAnim(ENTITIES_SPRITES,(3*SIZE_ANIM,0*SIZE_ANIM,SIZE_ANIM,SIZE_ANIM),1,loop=True,frames=6),
-                3:SpriteStripAnim(ENTITIES_SPRITES,(3*SIZE_ANIM,0*SIZE_ANIM,SIZE_ANIM,SIZE_ANIM),1,loop=True,frames=6),
-                }
-
 
 if __name__ == '__main__':
 
@@ -91,25 +87,21 @@ if __name__ == '__main__':
     ground_map.arr[0] = np.zeros((MAP_SIZE,))
     ground_map.arr[-1,:] = np.zeros((MAP_SIZE,))
 
-    print ground_map.arr.astype(int)
-
     pygame.init()
 
     screen = pygame.display.set_mode((WINDOW_WIDTH,WINDOW_HEIGHT))
 
-    n_critters = 16
-    n_grass = 20
     critters = []
     grass_ = []
 
     possible_indices = ground_map.get_indices_ones()
 
-    for _ in range(n_critters):
+    for _ in range(N_CRITTERS):
         start_x,start_y = random.choice(possible_indices)
         critter = Critter(start_x,start_y,ground_map)
         critters.append(critter)
 
-    for _ in range(n_grass):
+    for _ in range(N_GRASS):
         start_x,start_y = random.choice(possible_indices)
         grass = Grass(start_x,start_y)
         grass_.append(grass)

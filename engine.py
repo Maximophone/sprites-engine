@@ -1,6 +1,16 @@
 import random
 from spritesheet import SpriteStripAnim
 
+class Controler(object):
+    def __init__(self,entities=None):
+        if entities is None:
+            entities = []
+        self.entities = entities
+
+    def update(self):
+        for entity in self.entities:
+            entity.update()
+
 class Entity(object):
     clazz = 'generic'
     def __init__(self,x,y):
