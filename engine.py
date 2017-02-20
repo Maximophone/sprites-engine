@@ -2,14 +2,22 @@ import random
 from spritesheet import SpriteStripAnim
 
 class Controler(object):
-    def __init__(self,entities=None):
-        if entities is None:
-            entities = []
-        self.entities = entities
+    def __init__(self,engine):
+        self.engine = engine
+        self.init()
+
+    def init(self):
+        pass
 
     def update(self):
-        for entity in self.entities:
-            entity.update()
+        pass
+
+    def new_entity(self,*args,**kwargs):
+        return self.engine.new_entity(*args,**kwargs)
+
+    # def update(self):
+    #     for entity in self.entities:
+    #         entity.update()
 
 class Entity(object):
     clazz = 'generic'
@@ -39,10 +47,10 @@ class Entity(object):
         return "{},{}({})".format(self.x,self.y,self.orientation)
         
 class GraphicEntity(object):
-    def __init__(self,x,y,entity):
-        self.x = x
-        self.y = y
+    def __init__(self,entity):
         self.entity = entity
+        self.x = entity.x
+        self.y = entity.y
 
     def get_anim(self):
         pass
@@ -55,14 +63,22 @@ class GraphicEntity(object):
 
 
 class Engine(object):
-    def __init__(self,entities, graphic_store, frames):
+    """
+    The engine is aware of entity classes and graphics. Provides methods for creation and deletion.
+
+    """
+    def __init__(self,entities_dict,graphics_dict,controler_class,frames):
         self._counter = 0
+        self.step = 0
         self.frames = frames
-        self.entities = entities
+        self.entities_dict = entities_dict
+        self.graphics_dict = graphics_dict
+        self.entities = []
         self.graphic_entities = []
-        for entity in self.entities:
-            graphic_entity = graphic_store[entity.clazz](entity.x,entity.y,entity)
-            self.graphic_entities.append(graphic_entity)
+        self.controler = controler_class(self)
+        # for entity in self.entities:
+        #     graphic_entity = graphics_namespace[entity.clazz](entity.x,entity.y,entity)
+        #     self.graphic_entities.append(graphic_entity)
         
     def __iter__(self):
         return self
@@ -72,6 +88,19 @@ class Engine(object):
         for graphic_entity in self.graphic_entities:
             graphic_entity.update()
         if self._counter%self.frames==0:
+            self.step+=1
+            self.controler.update()
             for entity in self.entities:
                 entity.update()
         return self._counter
+
+    def new_entity(self,clazz,*args,**kwargs):
+        assert clazz in self.entities_dict, "Entity class {} is unknown to engine".format(clazz)
+        entity_constructor = self.entities_dict[clazz]
+        entity = entity_constructor(*args,**kwargs)
+        self.entities.append(entity)
+        graphic_clazz = clazz + "_Graphic"
+        if graphic_clazz in self.graphics_dict:
+            graphic_entity = self.graphics_dict[graphic_clazz](entity)
+            self.graphic_entities.append(graphic_entity)
+        return entity
