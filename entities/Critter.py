@@ -4,8 +4,7 @@ from engine import Entity
 class Critter(Entity):
     clazz = 'critter'
 
-    def __init__(self,x,y,ground_map):
-        super(Critter,self).__init__(x,y)
+    def init(self,ground_map):
         self.ground_map = ground_map
 
     def update(self):
@@ -15,3 +14,5 @@ class Critter(Entity):
             possible_dirs = [4]
         d = random.choice(possible_dirs)
         self.move(d)
+
+        neighbours = self.get_neighbours()

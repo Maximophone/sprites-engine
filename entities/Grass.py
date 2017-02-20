@@ -5,8 +5,7 @@ from globalvars import *
 class Grass(Entity):
     clazz = 'grass'
 
-    def __init__(self,x,y):
-        super(Grass,self).__init__(x,y)
+    def init(self):
         self.growth = 0
     
     def update(self):

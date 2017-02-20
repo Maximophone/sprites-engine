@@ -1,5 +1,6 @@
 import random
 from spritesheet import SpriteStripAnim
+from collections import OrderedDict
 
 class Controler(object):
     def __init__(self,engine):
@@ -21,10 +22,30 @@ class Controler(object):
 
 class Entity(object):
     clazz = 'generic'
-    def __init__(self,x,y):
-        self.x = x
-        self.y = y
+    def __init__(self,engine,x,y):
+        self._id = random.randint(0,1e9)
+        self._engine = engine
+        self._x = x
+        self._y = y
         self.orientation = 0
+
+    @property
+    def x(self):
+        return self._x
+
+    @x.setter
+    def x(self,value):
+        self._engine.update_position(self,value,self._y)
+        self._x = value
+
+    @property
+    def y(self):
+        return self._y
+
+    @y.setter
+    def y(self,value):
+        self._engine.update_position(self,self._x,value)
+        self._y = value
         
     def move(self,dir):
         assert dir in (0,1,2,3,4), "Invalid direction"
@@ -39,12 +60,21 @@ class Entity(object):
         else:
             return
         self.orientation = dir
+
+    def get_neighbours(self):
+        return self._engine.get_neighbours(self)
         
     def update(self):
         pass
 
     def __repr__(self):
         return "{},{}({})".format(self.x,self.y,self.orientation)
+
+    def __hash__(self):
+        return self._id
+
+    def __eq__(self,other):
+        return self._id == other._id
         
 class GraphicEntity(object):
     def __init__(self,entity):
@@ -67,18 +97,22 @@ class Engine(object):
     The engine is aware of entity classes and graphics. Provides methods for creation and deletion.
 
     """
-    def __init__(self,entities_dict,graphics_dict,controler_class,frames):
+    def __init__(self,entity_classes_dict,graphic_classes_dict,controler_class,frames,lattice_size=6):
         self._counter = 0
         self.step = 0
         self.frames = frames
-        self.entities_dict = entities_dict
-        self.graphics_dict = graphics_dict
+        self.entity_classes_dict = entity_classes_dict
+        self.graphic_classes_dict = graphic_classes_dict
         self.entities = []
         self.graphic_entities = []
+
+        self.lattice_size = lattice_size
+
+        self.position_to_entities = {}
+        self.lattice1 = {}
+        self.lattice2 = {}
+
         self.controler = controler_class(self)
-        # for entity in self.entities:
-        #     graphic_entity = graphics_namespace[entity.clazz](entity.x,entity.y,entity)
-        #     self.graphic_entities.append(graphic_entity)
         
     def __iter__(self):
         return self
@@ -94,13 +128,54 @@ class Engine(object):
                 entity.update()
         return self._counter
 
-    def new_entity(self,clazz,*args,**kwargs):
-        assert clazz in self.entities_dict, "Entity class {} is unknown to engine".format(clazz)
-        entity_constructor = self.entities_dict[clazz]
-        entity = entity_constructor(*args,**kwargs)
+    def new_entity(self,clazz,x,y,*args,**kwargs):
+        assert clazz in self.entity_classes_dict, "Entity class {} is unknown to engine".format(clazz)
+
+        entity_constructor = self.entity_classes_dict[clazz]
+        entity = entity_constructor(self,x,y)
+
         self.entities.append(entity)
+        self.position_to_entities.setdefault((x,y),set())
+        self.position_to_entities[(x,y)].add(entity)
+
+        self.lattice1.setdefault((int(x)/self.lattice_size,int(y)/self.lattice_size),set())
+        self.lattice1[(int(x)/self.lattice_size,int(y)/self.lattice_size)].add(entity)
+
+        self.lattice2.setdefault((int(x)/self.lattice_size+self.lattice_size/2,int(y)/self.lattice_size+self.lattice_size/2),set())
+        self.lattice2[(int(x)/self.lattice_size+self.lattice_size/2,int(y)/self.lattice_size+self.lattice_size/2)].add(entity)
+
+        entity.init(*args,**kwargs)
+
         graphic_clazz = clazz + "_Graphic"
-        if graphic_clazz in self.graphics_dict:
-            graphic_entity = self.graphics_dict[graphic_clazz](entity)
+        if graphic_clazz in self.graphic_classes_dict:
+            graphic_entity = self.graphic_classes_dict[graphic_clazz](entity)
             self.graphic_entities.append(graphic_entity)
         return entity
+
+    def update_position(self,entity,x,y):
+
+        self.position_to_entities[(entity.x,entity.y)].remove(entity)
+
+        self.position_to_entities.setdefault((x,y),set())
+        self.position_to_entities[(x,y)].add(entity)
+
+        self.lattice1[(int(entity.x)/self.lattice_size,int(entity.y)/self.lattice_size)].remove(entity)
+
+        self.lattice1.setdefault((int(x)/self.lattice_size,int(y)/self.lattice_size),set())
+        self.lattice1[(int(x)/self.lattice_size,int(y)/self.lattice_size)].add(entity)
+
+        self.lattice2[
+            (
+                int(entity.x)/self.lattice_size+self.lattice_size/2,
+                int(entity.y)/self.lattice_size+self.lattice_size/2
+                )
+            ].remove(entity)
+
+        self.lattice2.setdefault((int(x)/self.lattice_size+self.lattice_size/2,int(y)/self.lattice_size+self.lattice_size/2),set())
+        self.lattice2[(int(x)/self.lattice_size+self.lattice_size/2,int(y)/self.lattice_size+self.lattice_size/2)].add(entity)
+
+    def get_neighbours(self,entity):
+         n1 = self.lattice1[(int(entity.x)/self.lattice_size,int(entity.y)/self.lattice_size)]
+         n2 = self.lattice2[(int(entity.x)/self.lattice_size+self.lattice_size/2,int(entity.y)/self.lattice_size+self.lattice_size/2)]
+         return n1.union(n2)
+
