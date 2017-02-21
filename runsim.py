@@ -34,13 +34,19 @@ class MyControler(Controler):
 
         possible_indices = self.ground_map.get_indices_ones()
 
-        self.critters = []
+        self.slimes = []
         self.grass_ = []
+        self.roaches = []
 
         for _ in range(N_GRASS):
             start_x,start_y = random.choice(possible_indices)
             grass = self.new_entity("Grass",start_x,start_y)
             self.grass_.append(grass)
+
+        for _ in range(N_ROACHES):
+            start_x,start_y = random.choice(possible_indices)
+            roach = self.new_entity("Roach",start_x,start_y,self.ground_map)
+            self.roaches.append(roach)
 
         hive_x,hive_y = random.choice(possible_indices)
         self.hive = self.new_entity("Hive",hive_x,hive_y)
@@ -48,7 +54,7 @@ class MyControler(Controler):
 
     def update(self):
         if self.engine.step in [x*15+1 for x in range(20)]:
-            self.critters.append(self.new_entity("Critter",self.hive.x,self.hive.y,self.ground_map))
+            self.slimes.append(self.new_entity("Slime",self.hive.x,self.hive.y,self.ground_map))
 
 if __name__ == '__main__':
 

@@ -1,8 +1,8 @@
 import random
 from engine import Entity
 
-class Critter(Entity):
-    clazz = 'critter'
+class Roach(Entity):
+    clazz = 'roach'
 
     def init(self,ground_map):
         self.ground_map = ground_map

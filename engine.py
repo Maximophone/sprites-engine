@@ -2,6 +2,50 @@ import random
 from spritesheet import SpriteStripAnim
 from collections import OrderedDict
 
+class Dirs:
+    SOUTH = 0
+    WEST = 1
+    NORTH = 2
+    EAST = 3
+    STILL = 4
+
+class Lattice(object):
+    def __init__(self,length,offset_x,offset_y):
+        self._l = int(length)
+        self._ox = int(offset_x)
+        self._oy = int(offset_y)
+        self._d = {}
+
+    def _get_index(self,x,y):
+        return int(x)/self._l+self._ox, int(y)/self._l+self._oy
+
+    def get(self,x,y):
+        return self._d.setdefault(self._get_index(x,y),set())
+
+    def add(self,x,y,value):
+        values = self._d.setdefault(self._get_index(x,y),set())
+        values.add(value)
+
+    def remove(self,x,y,value):
+        values = self._d.setdefault(self._get_index(x,y),set())
+        values.remove(value)
+
+class MultiLattice(object):
+    def __init__(self,*lattices):
+        self.lattices = lattices
+
+    def get(self,x,y):
+        return set.union(*[l.get(x,y) for l in self.lattices])
+
+    def add(self,x,y,value):
+        for l in self.lattices:
+            l.add(x,y,value)
+
+    def remove(self,x,y,value):
+        for l in self.lattices:
+            l.remove(x,y,value)
+
+
 class Controler(object):
     def __init__(self,engine):
         self.engine = engine
@@ -16,9 +60,6 @@ class Controler(object):
     def new_entity(self,*args,**kwargs):
         return self.engine.new_entity(*args,**kwargs)
 
-    # def update(self):
-    #     for entity in self.entities:
-    #         entity.update()
 
 class Entity(object):
     clazz = 'generic'
@@ -49,13 +90,13 @@ class Entity(object):
         
     def move(self,dir):
         assert dir in (0,1,2,3,4), "Invalid direction"
-        if dir==0:
+        if dir==Dirs.SOUTH:
             self.x+=1
-        elif dir==1:
+        elif dir==Dirs.WEST:
             self.y-=1
-        elif dir==2:
+        elif dir==Dirs.NORTH:
             self.x-=1
-        elif dir==3:
+        elif dir==Dirs.EAST:
             self.y+=1
         else:
             return
@@ -106,11 +147,13 @@ class Engine(object):
         self.entities = []
         self.graphic_entities = []
 
-        self.lattice_size = lattice_size
-
         self.position_to_entities = {}
-        self.lattice1 = {}
-        self.lattice2 = {}
+        lattice1 = Lattice(lattice_size,0,0)
+        lattice2 = Lattice(lattice_size,0,lattice_size/2)
+        lattice3 = Lattice(lattice_size,lattice_size/2,0)
+        lattice4 = Lattice(lattice_size,lattice_size/2,lattice_size/2)
+
+        self.multi_lattice = MultiLattice(lattice1,lattice2,lattice3,lattice4)
 
         self.controler = controler_class(self)
         
@@ -138,11 +181,7 @@ class Engine(object):
         self.position_to_entities.setdefault((x,y),set())
         self.position_to_entities[(x,y)].add(entity)
 
-        self.lattice1.setdefault((int(x)/self.lattice_size,int(y)/self.lattice_size),set())
-        self.lattice1[(int(x)/self.lattice_size,int(y)/self.lattice_size)].add(entity)
-
-        self.lattice2.setdefault((int(x)/self.lattice_size+self.lattice_size/2,int(y)/self.lattice_size+self.lattice_size/2),set())
-        self.lattice2[(int(x)/self.lattice_size+self.lattice_size/2,int(y)/self.lattice_size+self.lattice_size/2)].add(entity)
+        self.multi_lattice.add(x,y,entity)
 
         entity.init(*args,**kwargs)
 
@@ -159,23 +198,9 @@ class Engine(object):
         self.position_to_entities.setdefault((x,y),set())
         self.position_to_entities[(x,y)].add(entity)
 
-        self.lattice1[(int(entity.x)/self.lattice_size,int(entity.y)/self.lattice_size)].remove(entity)
+        self.multi_lattice.remove(entity.x,entity.y,entity)
+        self.multi_lattice.add(x,y,entity)
 
-        self.lattice1.setdefault((int(x)/self.lattice_size,int(y)/self.lattice_size),set())
-        self.lattice1[(int(x)/self.lattice_size,int(y)/self.lattice_size)].add(entity)
-
-        self.lattice2[
-            (
-                int(entity.x)/self.lattice_size+self.lattice_size/2,
-                int(entity.y)/self.lattice_size+self.lattice_size/2
-                )
-            ].remove(entity)
-
-        self.lattice2.setdefault((int(x)/self.lattice_size+self.lattice_size/2,int(y)/self.lattice_size+self.lattice_size/2),set())
-        self.lattice2[(int(x)/self.lattice_size+self.lattice_size/2,int(y)/self.lattice_size+self.lattice_size/2)].add(entity)
 
     def get_neighbours(self,entity):
-         n1 = self.lattice1[(int(entity.x)/self.lattice_size,int(entity.y)/self.lattice_size)]
-         n2 = self.lattice2[(int(entity.x)/self.lattice_size+self.lattice_size/2,int(entity.y)/self.lattice_size+self.lattice_size/2)]
-         return n1.union(n2)
-
+        return self.multi_lattice.get(entity.x,entity.y)

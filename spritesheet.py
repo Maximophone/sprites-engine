@@ -34,17 +34,21 @@ class SpriteSheet(object):
     def images_at(self, rects, colorkey = None):
         return [self.image_at(rect, colorkey) for rect in rects]
 
-    def load_strip(self, rect, image_count, colorkey=None):
-        tups = [(rect[0]+rect[2]*x, rect[1], rect[2], rect[3]) 
-            for x in range(image_count)]
+    def load_strip(self, rect, image_count, colorkey=None, vertical=False):
+        if not vertical:
+            tups = [(rect[0]+rect[2]*x, rect[1], rect[2], rect[3]) 
+                for x in range(image_count)]
+        else:
+            tups = [(rect[0], rect[1]+rect[3]*x, rect[2], rect[3]) 
+                for x in range(image_count)]
         return self.images_at(tups, colorkey)
 
 class SpriteStripAnim(object):
 
-    def __init__(self, filename, rect, count, colorkey=None, loop=False, frames=1):
+    def __init__(self, filename, rect, count, colorkey=None, loop=False, frames=1, vertical=False):
         self.filename = filename
         ss = SpriteSheet(filename)
-        self.images = ss.load_strip(rect, count, colorkey)
+        self.images = ss.load_strip(rect, count, colorkey, vertical=vertical)
         self.i = 0
         self.loop = loop
         self.frames = frames
