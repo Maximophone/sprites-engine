@@ -1,5 +1,6 @@
 import pygame
 import numpy as np
+from scipy import signal
 
 class SpriteSheet(object):
     def __init__(self, filename, offset=(0,0), interval=False):
@@ -76,6 +77,55 @@ class SpriteStripAnim(object):
         self.images.extend(ss.images)
         return self
 
+kernel_nw = np.array([
+        [0,0,0],
+        [0,0,1],
+        [0,1,1]
+    ])
+kernel_ne = np.array([
+        [0,0,0],
+        [1,0,0],
+        [1,1,0]
+    ])
+kernel_sw = np.array([
+        [0,1,1],
+        [0,0,1],
+        [0,0,0]
+    ])
+kernel_se = np.array([
+        [1,1,0],
+        [1,0,0],
+        [0,0,0]
+    ])
+kernel_cards = np.array([
+        [0,64,0],
+        [16,0,8],
+        [0,2,0]
+    ])
+kernel_cards_4bit = np.array([
+        [0,16,0],
+        [8,0,4],
+        [0,2,0]
+    ])
+
+def conv_corner(arr,kernel):
+    return (signal.convolve2d(arr,kernel_ne,mode='same')==3).astype(int) 
+
+def conv(arr,kernel):
+    return signal.convolve2d(arr,kernel,mode='same')
+
+def process_arr_8bit(arr):
+    conv_ne = conv_corner(arr,kernel_ne)
+    conv_nw = conv_corner(arr,kernel_nw)
+    conv_se = conv_corner(arr,kernel_se)
+    conv_sw = conv_corner(arr,kernel_sw)
+    conv_cards = conv(arr,kernel_cards)
+    return (conv_cards + conv_nw + 4*conv_ne + 32*conv_sw + 128*conv_se)*arr+(1-arr)*-1
+
+def process_arr_4bit(arr):
+    conv_cards = conv(arr,kernel_cards_4bit)
+    return conv_cards*arr+(1-arr)*-1
+
 class Tiler(object):
     def __init__(self, spritesheet,n_per_row,size,offset=(0,0),index_dict=None,colorkey=None):
         if index_dict is None:index_dict = {}
@@ -99,7 +149,26 @@ class Tiler(object):
         coords = self.index_to_coords(index)
         return self.spritesheet.image_at((coords[0],coords[1],self.size,self.size),colorkey=self.colorkey)
 
+    def map_to_indices(self,arr):
+        raise NotImplemented
+
     def get_surface(self,bin_map):
+        indices = self.map_to_indices(bin_map.arr)
+        surface = pygame.Surface((bin_map.arr.shape[0]*self.size,bin_map.arr.shape[1]*self.size), pygame.SRCALPHA, 32).convert_alpha()
+
+        c_i = 0
+        c_j = 0
+        for i,row in enumerate(indices):
+            for j,val in enumerate(row):
+                coords = self.index_to_coords(val)
+                tile = self.spritesheet.image_at((coords[0],coords[1],self.size,self.size),colorkey=self.colorkey)
+                surface.blit(tile, (c_j,c_i))
+                c_j+=self.size
+            c_i+=self.size
+            c_j = 0
+        return surface
+
+    def get_surface_old(self,bin_map):
 
         surface = pygame.Surface((bin_map.arr.shape[0]*self.size,bin_map.arr.shape[1]*self.size), pygame.SRCALPHA, 32).convert_alpha()
 
@@ -131,6 +200,9 @@ class Tiler8bit(Tiler):
             (se&s&e)<<7
         ]
         return sum(vals)
+
+    def map_to_indices(self,arr):
+        return process_arr_8bit(arr)
         
 class Tiler4bit(Tiler):
     
@@ -144,6 +216,9 @@ class Tiler4bit(Tiler):
             s<<3,
         ]
         return sum(vals)
+
+    def map_to_indices(self,arr):
+        return process_arr_4bit(arr)
 
 class BinMap(object):
     def __init__(self,arr):

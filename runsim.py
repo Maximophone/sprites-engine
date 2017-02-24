@@ -9,6 +9,8 @@ import graphics
 
 from globalvars import *
 
+from pygame.locals import FULLSCREEN,DOUBLEBUF
+
 def gen_map():
     ground_map = BinMap(np.random.uniform(size=(MAP_SIZE,MAP_SIZE))<EARTH_DENSITY)
     ground_map.arr[:,0] = np.zeros((MAP_SIZE,))
@@ -19,9 +21,7 @@ def gen_map():
     return ground_map
 
 def get_surface(ground_map):
-    ss = SpriteSheet(GROUNDMAP_SPRITES)
-    ground_tiler = Tiler8bit(ss,N_PER_ROW,SIZE,index_dict=GROUNDMAP_TILES_DICT)
-    ground_map_surface = ground_tiler.get_surface(ground_map)
+    ground_map_surface = TILER.get_surface(ground_map)
 
     return ground_map_surface
 
@@ -62,6 +62,10 @@ if __name__ == '__main__':
 
     screen = pygame.display.set_mode((WINDOW_WIDTH,WINDOW_HEIGHT))
 
+    SS = SpriteSheet(GROUNDMAP_SPRITES)
+    TILER = Tiler8bit(SS,N_PER_ROW,SIZE,index_dict=GROUNDMAP_TILES_DICT)
+
+
     engine = Engine(entities.classes,graphics.classes,MyControler,frames=30)
 
     clock = pygame.time.Clock()
@@ -69,7 +73,8 @@ if __name__ == '__main__':
     for step in engine:
         screen.fill(pygame.Color("black"))
       
-        screen.blit(engine.controler.ground_map_surface,(0,0))
+        # screen.blit(engine.controler.ground_map_surface,(0,0))
+        screen.blit(get_surface(engine.controler.ground_map),(0,0))
 
         for graphic in engine.graphic_entities:
             c_i = graphic.x*SIZE+SIZE_ANIM/2 - 1
