@@ -132,6 +132,29 @@ class GraphicEntity(object):
         self.x += abs(x-self.x)/(x-self.x)*0.03 if self.x!=x else 0
         self.y += abs(y-self.y)/(y-self.y)*0.03 if self.y!=y else 0
 
+class Camera(object):
+
+    def __init__(self,engine,rect):
+        self._engine = engine
+        self.rect = rect
+
+    def get_image(self):
+        pass
+
+class Map(object):
+    def __init__(self):
+        pass
+
+def _is_point_in_rect(point,rect):
+    if point[0]<rect[0]:
+        return False
+    if point[0]>rect[0]+rect[2]:
+        return False
+    if point[1]<rect[1]:
+        return False
+    if point[1]>rect[1]+rect[3]:
+        return False
+    return True
 
 class Engine(object):
     """
@@ -204,3 +227,12 @@ class Engine(object):
 
     def get_neighbours(self,entity):
         return self.multi_lattice.get(entity.x,entity.y)
+
+    def _get_graphic_entities_in_rect(self,rect):
+        return [graphic for graphic in self.graphic_entities if _is_point_in_rect((graphic.x,graphic.y),rect)]
+
+    def get_surface(self,rect):
+        #Problem: we need to solve the duality coordinates in game/coordinates on screen
+        map_surface = self.map.get_surface(rect)
+        for graphic in self._get_graphic_entities_in_rect(rect):
+            screen.blit(graphic.get_anim().next(),(c_j,c_i))

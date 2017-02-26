@@ -109,7 +109,7 @@ kernel_cards_4bit = np.array([
     ])
 
 def conv_corner(arr,kernel):
-    return (signal.convolve2d(arr,kernel_ne,mode='same')==3).astype(int) 
+    return (signal.convolve2d(arr,kernel,mode='same')==3).astype(int) 
 
 def conv(arr,kernel):
     return signal.convolve2d(arr,kernel,mode='same')
@@ -154,7 +154,7 @@ class Tiler(object):
 
     def get_surface(self,bin_map):
         indices = self.map_to_indices(bin_map.arr)
-        surface = pygame.Surface((bin_map.arr.shape[0]*self.size,bin_map.arr.shape[1]*self.size), pygame.SRCALPHA, 32).convert_alpha()
+        surface = pygame.Surface((bin_map.arr.shape[0]*self.size,bin_map.arr.shape[1]*self.size), pygame.SRCALPHA, 32).convert()
 
         c_i = 0
         c_j = 0

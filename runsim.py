@@ -80,7 +80,6 @@ if __name__ == '__main__':
             c_i = graphic.x*SIZE+SIZE_ANIM/2 - 1
             c_j = graphic.y*SIZE+SIZE_ANIM/2 - 1
             screen.blit(graphic.get_anim().next(),(c_j,c_i))
-
         pygame.display.flip()
         clock.tick(60)
         
