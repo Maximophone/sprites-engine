@@ -1,8 +1,9 @@
 from engine import GraphicEntity
 from spritesheet import SpriteStripAnim
 from globalvars import ENTITIES_SPRITES, SIZE_ANIM
+from generic import Generic_Graphic
 
-class Grass_Graphic(GraphicEntity):
+class Grass_Graphic(Generic_Graphic):
     def __init__(self,entity):
         super(Grass_Graphic,self).__init__(entity)
         self.anims = {

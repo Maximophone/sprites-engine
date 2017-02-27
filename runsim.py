@@ -25,13 +25,25 @@ def get_surface(ground_map):
 
     return ground_map_surface
 
+class MyMap(Map):
+    
+    def init(self):
+        self.ground_map = gen_map()
+        self.ground_map_surface = get_surface(self.ground_map)
+
+    def get_map(self,rect):
+        return self.ground_map
+            
+    def get_surface(self,rect):
+        rect_arr = self.ground_map.arr[rect[0]:rect[0]+rect[2],rect[1]:rect[1]+rect[3]]
+        temp_map = BinMap(rect_arr)
+        return TILER.get_surface(temp_map)
+
 class MyControler(Controler):
 
     def  init(self):
 
-        self.ground_map = gen_map()
-        self.ground_map_surface = get_surface(self.ground_map)
-
+        self.ground_map = self.engine.get_map(None)
         possible_indices = self.ground_map.get_indices_ones()
 
         self.slimes = []
@@ -65,8 +77,7 @@ if __name__ == '__main__':
     SS = SpriteSheet(GROUNDMAP_SPRITES)
     TILER = Tiler8bit(SS,N_PER_ROW,SIZE,index_dict=GROUNDMAP_TILES_DICT)
 
-
-    engine = Engine(entities.classes,graphics.classes,MyControler,frames=30,ratio_x=SIZE,ratio_y=SIZE)
+    engine = Engine(entities.classes,graphics.classes,MyControler,frames=30,ratio_x=SIZE,ratio_y=SIZE,map=MyMap)
 
     clock = pygame.time.Clock()
 

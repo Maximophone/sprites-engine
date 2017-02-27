@@ -7,7 +7,7 @@ for module_name in os.listdir(os.path.dirname(__file__)):
         continue
 
     module = __import__(module_name[:-3], locals(), globals())
-    classes[module_name[:-3]] = getattr(module,module_name[:-3])
+    classes[module_name[:-3]] = getattr(module,module_name[:-3],None)
 
 
 del module_name

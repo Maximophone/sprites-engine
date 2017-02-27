@@ -1,8 +1,9 @@
 from engine import GraphicEntity, Dirs
 from spritesheet import SpriteStripAnim
 from globalvars import ENTITIES_SPRITES, SIZE_ANIM
+from generic import Generic_Graphic
 
-class Roach_Graphic(GraphicEntity):
+class Roach_Graphic(Generic_Graphic):
     def __init__(self,entity):
         super(Roach_Graphic,self).__init__(entity)
         self.anims = {

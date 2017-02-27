@@ -118,10 +118,11 @@ class Entity(object):
         return self._id == other._id
         
 class GraphicEntity(object):
-    def __init__(self,entity):
+    def __init__(self,entity,size):
         self.entity = entity
         self.x = entity.x
         self.y = entity.y
+        self.size = size
 
     def get_anim(self):
         pass
@@ -169,6 +170,10 @@ class Map(object):
     def __init__(self,chunk_size=32):
         self.chunk_size = chunk_size
         self._chunks_cache = {}
+        self.init()
+
+    def init(self):
+        pass
 
     def get_surface(self,rect):
         raise NotImplemented
@@ -204,7 +209,7 @@ class Engine(object):
     The engine is aware of entity classes and graphics. Provides methods for creation and deletion.
 
     """
-    def __init__(self,entity_classes_dict,graphic_classes_dict,controler_class,frames,ratio_x,ratio_y,lattice_size=6):
+    def __init__(self,entity_classes_dict,graphic_classes_dict,controler_class,frames,ratio_x,ratio_y,map,lattice_size=6):
         """
         Args:
         - entity_classes_dict: Dictionary of all the entity classes available to the engine
@@ -212,6 +217,7 @@ class Engine(object):
         - controler_class: The controler class to be instantiated by the engine
         - frames: Integer, how many frames per game step
         - ratio_x, ratio_y: integers, how many pixels per game unit (in both directions).
+        - map: Any class that implements the Map class
 
         Kwargs:
         - lattice_size: Size of the lattices used for computing emtity neighbours, in game unit
@@ -225,6 +231,7 @@ class Engine(object):
         self.graphic_classes_dict = graphic_classes_dict
         self.entities = []
         self.graphic_entities = []
+        self.map_ = map()
 
         self.position_to_entities = {}
         lattice1 = Lattice(lattice_size,0,0)
@@ -289,9 +296,14 @@ class Engine(object):
 
     def get_surface(self,rect):
         #Problem: we need to solve the duality coordinates in game/coordinates on screen
-        map_surface = self.map.get_surface(rect)
+        map_surface = self.map_.get_surface(rect)
         for graphic in self._get_graphic_entities_in_rect(rect):
-            map_surface.blit(graphic.get_anim().next(),(self.ratio_x,self.ratio_y))
+            x = self.ratio_x*graphic.x + self.ratio_x/2. - graphic.size[0]/2.
+            y = self.ratio_y*graphic.y + self.ratio_y/2. - graphic.size[1]/2.
+            map_surface.blit(graphic.get_anim().next(),(y,x))
         return map_surface
 
-        
+    def get_map(self,rect):
+        return self.map_.get_map(rect)
+            
+            
