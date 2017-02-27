@@ -161,7 +161,20 @@ class Engine(object):
     The engine is aware of entity classes and graphics. Provides methods for creation and deletion.
 
     """
-    def __init__(self,entity_classes_dict,graphic_classes_dict,controler_class,frames,lattice_size=6):
+    def __init__(self,entity_classes_dict,graphic_classes_dict,controler_class,frames,ratio_x,ratio_y,lattice_size=6):
+        """
+        Args:
+        - entity_classes_dict: Dictionary of all the entity classes available to the engine
+        - graphic_classes_dict: Dictionary of all the graphic classes available to the engine
+        - controler_class: The controler class to be instantiated by the engine
+        - frames: Integer, how many frames per game step
+        - ratio_x, ratio_y: integers, how many pixels per game unit (in both directions).
+
+        Kwargs:
+        - lattice_size: Size of the lattices used for computing emtity neighbours, in game unit
+        """
+        self.ratio_x = ratio_x
+        self.ratio_y = ratio_y
         self._counter = 0
         self.step = 0
         self.frames = frames
@@ -236,3 +249,4 @@ class Engine(object):
         map_surface = self.map.get_surface(rect)
         for graphic in self._get_graphic_entities_in_rect(rect):
             screen.blit(graphic.get_anim().next(),(c_j,c_i))
+            
