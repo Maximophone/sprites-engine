@@ -141,9 +141,52 @@ class Camera(object):
     def get_image(self):
         pass
 
+
+def _get_chunk_ids(rect,chunk_size):
+    range_x = range(rect[0]%chunk_size,(rect[0]+rect[2])%chunk_size+1)
+    range_y = range(rect[1]%chunk_size,(rect[1]+rect[3])%chunk_size+1)
+
+    return [(x,y) for x in range_x for y in range_y]
+    
+def _get_chunk_rect(chunk_id,chunk_size):
+    return (chunk_id[0]*chunk_size,chunk_id[1]*chunk_size,chunk_size,chunk_size)
+
+def _aggregate_chunks_dict(chunks_dict,chunk_size):
+    ix = [i[0] for i in chunks_dict.keys()]
+    iy = [i[1] for i in chunks_dict.keys()]
+
+    size_x = (max(ix)-min(ix))*chunk_size
+    size_y = (max(iy)-min(iy))*chunk_size
+    
+    surface = pygame.Surface((size_x,size_y),pygame.SRCALPHA,32).convert()
+
+    for chunk_id,chunk in chunks_dict:
+        surface.blit(chunk,(chunk_id[0]*chunk_size,chunk_id[1]*chunk_size))
+        
+    return surface
+        
 class Map(object):
-    def __init__(self):
-        pass
+    def __init__(self,chunk_size=32):
+        self.chunk_size = chunk_size
+        self._chunks_cache = {}
+
+    def get_surface(self,rect):
+        raise NotImplemented
+    
+    def _get_surface(self,rect):
+        chunk_ids = _get_chunk_ids(rect,self.chunk_size)
+        surface_dict = {}
+        for chunk_id in chunk_ids:
+            if chunk_id in self._chunks_cache:
+                surface_dict[chunk_id] = self._chunks_cache[chunk_id]
+            else:
+                print("Generating chunk {}".format(chunk_id))
+                chunk_rect = _get_chunk_rect(chunk_id,self.chunk_size)
+                chunk = self.get_surface(chunk_rect)
+                self._chunks_cache[chunk_id] = chunk
+        surface = _aggregate_chunks_dict(surface_dict)
+        return surface
+        
 
 def _is_point_in_rect(point,rect):
     if point[0]<rect[0]:
@@ -248,5 +291,7 @@ class Engine(object):
         #Problem: we need to solve the duality coordinates in game/coordinates on screen
         map_surface = self.map.get_surface(rect)
         for graphic in self._get_graphic_entities_in_rect(rect):
-            screen.blit(graphic.get_anim().next(),(c_j,c_i))
-            
+            map_surface.blit(graphic.get_anim().next(),(self.ratio_x,self.ratio_y))
+        return map_surface
+
+        

@@ -66,7 +66,7 @@ if __name__ == '__main__':
     TILER = Tiler8bit(SS,N_PER_ROW,SIZE,index_dict=GROUNDMAP_TILES_DICT)
 
 
-    engine = Engine(entities.classes,graphics.classes,MyControler,frames=30)
+    engine = Engine(entities.classes,graphics.classes,MyControler,frames=30,ratio_x=SIZE,ratio_y=SIZE)
 
     clock = pygame.time.Clock()
 
@@ -74,12 +74,17 @@ if __name__ == '__main__':
         screen.fill(pygame.Color("black"))
       
         # screen.blit(engine.controler.ground_map_surface,(0,0))
-        screen.blit(get_surface(engine.controler.ground_map),(0,0))
+        # screen.blit(get_surface(engine.controler.ground_map),(0,0))
 
-        for graphic in engine.graphic_entities:
-            c_i = graphic.x*SIZE+SIZE_ANIM/2 - 1
-            c_j = graphic.y*SIZE+SIZE_ANIM/2 - 1
-            screen.blit(graphic.get_anim().next(),(c_j,c_i))
+        # for graphic in engine.graphic_entities:
+        #     c_i = graphic.x*SIZE+SIZE_ANIM/2 - 1
+        #     c_j = graphic.y*SIZE+SIZE_ANIM/2 - 1
+        #     screen.blit(graphic.get_anim().next(),(c_j,c_i))
+
+        surface = engine.get_surface((0,0,MAP_SIZE,MAP_SIZE))
+
+        screen.blit(surface,(0,0))
+        
         pygame.display.flip()
         clock.tick(60)
         
