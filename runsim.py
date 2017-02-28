@@ -90,7 +90,7 @@ if __name__ == '__main__':
     SS = SpriteSheet(GROUNDMAP_SPRITES)
     TILER = Tiler8bit(SS,N_PER_ROW,SIZE,index_dict=GROUNDMAP_TILES_DICT)
 
-    engine = Engine(entities.classes,graphics.classes,MyControler,frames=30,ratio_x=SIZE,ratio_y=SIZE,map=MyMap,event_handler=MyEventHandler)
+    engine = Engine(entities.classes,graphics.classes,MyControler,frames=30,ratio_x=SIZE,ratio_y=SIZE,map=MyMap,event_handler=MyEventHandler,origin_rect=(0,0,MAP_SIZE,MAP_SIZE))
 
     clock = pygame.time.Clock()
 
@@ -105,7 +105,7 @@ if __name__ == '__main__':
         #     c_j = graphic.y*SIZE+SIZE_ANIM/2 - 1
         #     screen.blit(graphic.get_anim().next(),(c_j,c_i))
 
-        surface = engine.get_surface((0,0,MAP_SIZE,MAP_SIZE))
+        surface = engine.get_surface()
 
         screen.blit(surface,(0,0))
         

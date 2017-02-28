@@ -1,4 +1,5 @@
 import pygame
+from pygame.rect import Rect
 import random
 from spritesheet import SpriteStripAnim
 from collections import OrderedDict
@@ -37,7 +38,6 @@ def _aggregate_chunks_dict(chunks_dict,chunk_size):
         surface.blit(chunk,(chunk_id[0]*chunk_size,chunk_id[1]*chunk_size))
         
     return surface
-        
 
 class Dirs:
     SOUTH = 0
@@ -172,11 +172,32 @@ class Camera(object):
 
     def __init__(self,engine,rect):
         self._engine = engine
-        self.rect = rect
+        self._rect = Rect(*rect)
 
-    def get_image(self):
-        pass
+    @property
+    def rect(self):
+        return self._rect
+    
+    def move_abs(self,pos):
+        self._rect = Rect(pos[0],pos[1],self._rect[2],self._rect[3])
 
+    def move_rel(self,dpos):
+        self._rect = Rect(
+            self._rect[0]+dpos[0],
+            self._rect[1]+dpos[1],
+            self._rect[2],
+            self._rect[3])
+
+    def zoom(self,rzoom):
+        rect_center = self._rect.center
+        new_w = rzoom*self._rect.w
+        new_h = rzoom*self._rect.h
+        self._rect = Rect(
+            rect_center[0]-new_w/2.,
+            rect_center[1]-new_h/2.,
+            new_w,
+            new_h)
+        
 class Map(object):
     def __init__(self,chunk_size=32):
         self.chunk_size = chunk_size
@@ -208,7 +229,7 @@ class Engine(object):
     The engine is aware of entity classes and graphics. Provides methods for creation and deletion.
 
     """
-    def __init__(self,entity_classes_dict,graphic_classes_dict,controler_class,frames,ratio_x,ratio_y,map,event_handler,lattice_size=6):
+    def __init__(self,entity_classes_dict,graphic_classes_dict,controler_class,frames,ratio_x,ratio_y,map,event_handler,origin_rect,lattice_size=6):
         """
         Args:
         - entity_classes_dict: Dictionary of all the entity classes available to the engine
@@ -218,6 +239,7 @@ class Engine(object):
         - ratio_x, ratio_y: integers, how many pixels per game unit (in both directions).
         - map: Any class that implements the Map class
         - event_handler: Any class that implements the EventHandler class
+        - origin_rect: Initial rectangle for game camera
 
         Kwargs:
         - lattice_size: Size of the lattices used for computing emtity neighbours, in game unit
@@ -233,7 +255,8 @@ class Engine(object):
         self.graphic_entities = []
         self.map_ = map()
         self.event_handler = event_handler(self)
-
+        self.camera = Camera(self,origin_rect)
+        
         self.position_to_entities = {}
         lattice1 = Lattice(lattice_size,0,0)
         lattice2 = Lattice(lattice_size,0,lattice_size/2)
@@ -301,7 +324,13 @@ class Engine(object):
     def _get_graphic_entities_in_rect(self,rect):
         return [graphic for graphic in self.graphic_entities if _is_point_in_rect((graphic.x,graphic.y),rect)]
 
-    def get_surface(self,rect):
+    def get_surface(self,rect=None):
+        if rect is None:
+            rect = self.camera.rect
+
+        return self._get_surface(rect)
+    
+    def _get_surface(self,rect):
         #Problem: we need to solve the duality coordinates in game/coordinates on screen
         map_surface = self.map_.get_surface(rect)
         for graphic in self._get_graphic_entities_in_rect(rect):
@@ -315,4 +344,5 @@ class Engine(object):
 
     def get_controler(self):
         return self.controler
+    
             
