@@ -178,27 +178,27 @@ class Camera(object):
 
     def __init__(self,engine,rect):
         self._engine = engine
-        self._rect = Rect(*rect)
+        self._rect = rect
 
     @property
     def rect(self):
         return self._rect
     
     def move_abs(self,pos):
-        self._rect = Rect(pos[0],pos[1],self._rect[2],self._rect[3])
+        self._rect = (pos[0],pos[1],self._rect[2],self._rect[3])
 
     def move_rel(self,dpos):
-        self._rect = Rect(
+        self._rect = (
             self._rect[0]+dpos[0],
             self._rect[1]+dpos[1],
             self._rect[2],
             self._rect[3])
 
     def zoom(self,rzoom):
-        rect_center = self._rect.center
-        new_w = rzoom*self._rect.w
-        new_h = rzoom*self._rect.h
-        self._rect = Rect(
+        rect_center = (self._rect[0]+self._rect[2]/2.,self._rect[1]+self._rect[3]/2.)
+        new_w = rzoom*self._rect[2]
+        new_h = rzoom*self._rect[3]
+        self._rect = (
             rect_center[0]-new_w/2.,
             rect_center[1]-new_h/2.,
             new_w,
@@ -281,8 +281,12 @@ class Engine(object):
         self._counter+=1
 
         for event in pygame.event.get():
-            print(event)
+#            print(event)
             self.event_handler.on_event(event)
+
+        self.event_handler.key_pressed(pygame.key.get_pressed())
+
+        self.event_handler.mouse_pressed(pygame.mouse.get_pressed(),pygame.mouse.get_pos())
         
         for graphic_entity in self.graphic_entities:
             graphic_entity.update(dt)

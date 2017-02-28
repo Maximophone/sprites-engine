@@ -112,3 +112,9 @@ class EventHandler(object):
                     self.on_restore()
                 else:
                     self.on_minimize()
+
+    def key_pressed(self,keys):
+        pass
+
+    def mouse_pressed(self,mouse_buttons,position):
+        pass

@@ -33,7 +33,22 @@ class MyEventHandler(EventHandler):
         # ipdb.set_trace()
         position = (int(round(event.pos[0]))/self._engine.ratio_x,int(round(event.pos[1]))/self._engine.ratio_y)
         self._engine.get_controler().on_lbutton_down(position)
-    
+
+    def key_pressed(self,keys):
+        if keys[pygame.K_DOWN]:
+            self._engine.camera.move_rel(dpos=(0.1,0))
+        if keys[pygame.K_UP]:
+            self._engine.camera.move_rel(dpos=(-0.1,0))
+        if keys[pygame.K_LEFT]:
+            self._engine.camera.move_rel(dpos=(0,-0.1))
+        if keys[pygame.K_RIGHT]:
+            self._engine.camera.move_rel(dpos=(0,0.1))
+
+        if sum(keys)>1:
+            # import ipdb
+            # ipdb.set_trace()
+            print self._engine.camera.rect
+            
 class MyMap(Map):
     
     def init(self):
