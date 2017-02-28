@@ -25,6 +25,15 @@ def get_surface(ground_map):
 
     return ground_map_surface
 
+class MyEventHandler(EventHandler):
+
+    def on_lbutton_down(self,event):
+        print("LBUTTON_DOWN")
+        # import ipdb
+        # ipdb.set_trace()
+        position = (int(round(event.pos[0]))/self._engine.ratio_x,int(round(event.pos[1]))/self._engine.ratio_y)
+        self._engine.get_controler().on_lbutton_down(position)
+
 class MyMap(Map):
     
     def init(self):
@@ -68,6 +77,10 @@ class MyControler(Controler):
         if self.engine.step in [x*15+1 for x in range(20)]:
             self.slimes.append(self.new_entity("Slime",self.hive.x,self.hive.y,self.ground_map))
 
+    def on_lbutton_down(self,position):
+        roach = self.new_entity("Roach",position[1],position[0],self.ground_map)
+        self.roaches.append(roach)
+
 if __name__ == '__main__':
 
     pygame.init()
@@ -77,7 +90,7 @@ if __name__ == '__main__':
     SS = SpriteSheet(GROUNDMAP_SPRITES)
     TILER = Tiler8bit(SS,N_PER_ROW,SIZE,index_dict=GROUNDMAP_TILES_DICT)
 
-    engine = Engine(entities.classes,graphics.classes,MyControler,frames=30,ratio_x=SIZE,ratio_y=SIZE,map=MyMap)
+    engine = Engine(entities.classes,graphics.classes,MyControler,frames=30,ratio_x=SIZE,ratio_y=SIZE,map=MyMap,event_handler=MyEventHandler)
 
     clock = pygame.time.Clock()
 

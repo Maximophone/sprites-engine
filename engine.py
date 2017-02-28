@@ -1,6 +1,43 @@
+import pygame
 import random
 from spritesheet import SpriteStripAnim
 from collections import OrderedDict
+from event_handler import EventHandler
+
+def _is_point_in_rect(point,rect):
+    if point[0]<rect[0]:
+        return False
+    if point[0]>rect[0]+rect[2]:
+        return False
+    if point[1]<rect[1]:
+        return False
+    if point[1]>rect[1]+rect[3]:
+        return False
+    return True
+
+def _get_chunk_ids(rect,chunk_size):
+    range_x = range(rect[0]%chunk_size,(rect[0]+rect[2])%chunk_size+1)
+    range_y = range(rect[1]%chunk_size,(rect[1]+rect[3])%chunk_size+1)
+
+    return [(x,y) for x in range_x for y in range_y]
+    
+def _get_chunk_rect(chunk_id,chunk_size):
+    return (chunk_id[0]*chunk_size,chunk_id[1]*chunk_size,chunk_size,chunk_size)
+
+def _aggregate_chunks_dict(chunks_dict,chunk_size):
+    ix = [i[0] for i in chunks_dict.keys()]
+    iy = [i[1] for i in chunks_dict.keys()]
+
+    size_x = (max(ix)-min(ix))*chunk_size
+    size_y = (max(iy)-min(iy))*chunk_size
+    
+    surface = pygame.Surface((size_x,size_y),pygame.SRCALPHA,32).convert()
+
+    for chunk_id,chunk in chunks_dict:
+        surface.blit(chunk,(chunk_id[0]*chunk_size,chunk_id[1]*chunk_size))
+        
+    return surface
+        
 
 class Dirs:
     SOUTH = 0
@@ -45,7 +82,6 @@ class MultiLattice(object):
         for l in self.lattices:
             l.remove(x,y,value)
 
-
 class Controler(object):
     def __init__(self,engine):
         self.engine = engine
@@ -59,7 +95,6 @@ class Controler(object):
 
     def new_entity(self,*args,**kwargs):
         return self.engine.new_entity(*args,**kwargs)
-
 
 class Entity(object):
     clazz = 'generic'
@@ -142,30 +177,6 @@ class Camera(object):
     def get_image(self):
         pass
 
-
-def _get_chunk_ids(rect,chunk_size):
-    range_x = range(rect[0]%chunk_size,(rect[0]+rect[2])%chunk_size+1)
-    range_y = range(rect[1]%chunk_size,(rect[1]+rect[3])%chunk_size+1)
-
-    return [(x,y) for x in range_x for y in range_y]
-    
-def _get_chunk_rect(chunk_id,chunk_size):
-    return (chunk_id[0]*chunk_size,chunk_id[1]*chunk_size,chunk_size,chunk_size)
-
-def _aggregate_chunks_dict(chunks_dict,chunk_size):
-    ix = [i[0] for i in chunks_dict.keys()]
-    iy = [i[1] for i in chunks_dict.keys()]
-
-    size_x = (max(ix)-min(ix))*chunk_size
-    size_y = (max(iy)-min(iy))*chunk_size
-    
-    surface = pygame.Surface((size_x,size_y),pygame.SRCALPHA,32).convert()
-
-    for chunk_id,chunk in chunks_dict:
-        surface.blit(chunk,(chunk_id[0]*chunk_size,chunk_id[1]*chunk_size))
-        
-    return surface
-        
 class Map(object):
     def __init__(self,chunk_size=32):
         self.chunk_size = chunk_size
@@ -192,24 +203,12 @@ class Map(object):
         surface = _aggregate_chunks_dict(surface_dict)
         return surface
         
-
-def _is_point_in_rect(point,rect):
-    if point[0]<rect[0]:
-        return False
-    if point[0]>rect[0]+rect[2]:
-        return False
-    if point[1]<rect[1]:
-        return False
-    if point[1]>rect[1]+rect[3]:
-        return False
-    return True
-
 class Engine(object):
     """
     The engine is aware of entity classes and graphics. Provides methods for creation and deletion.
 
     """
-    def __init__(self,entity_classes_dict,graphic_classes_dict,controler_class,frames,ratio_x,ratio_y,map,lattice_size=6):
+    def __init__(self,entity_classes_dict,graphic_classes_dict,controler_class,frames,ratio_x,ratio_y,map,event_handler,lattice_size=6):
         """
         Args:
         - entity_classes_dict: Dictionary of all the entity classes available to the engine
@@ -218,6 +217,7 @@ class Engine(object):
         - frames: Integer, how many frames per game step
         - ratio_x, ratio_y: integers, how many pixels per game unit (in both directions).
         - map: Any class that implements the Map class
+        - event_handler: Any class that implements the EventHandler class
 
         Kwargs:
         - lattice_size: Size of the lattices used for computing emtity neighbours, in game unit
@@ -232,6 +232,7 @@ class Engine(object):
         self.entities = []
         self.graphic_entities = []
         self.map_ = map()
+        self.event_handler = event_handler(self)
 
         self.position_to_entities = {}
         lattice1 = Lattice(lattice_size,0,0)
@@ -249,6 +250,11 @@ class Engine(object):
     def next(self):
         dt = 1./self.frames
         self._counter+=1
+
+        for event in pygame.event.get():
+            print(event)
+            self.event_handler.on_event(event)
+        
         for graphic_entity in self.graphic_entities:
             graphic_entity.update(dt)
         if self._counter%self.frames==0:
@@ -306,5 +312,7 @@ class Engine(object):
 
     def get_map(self,rect):
         return self.map_.get_map(rect)
-            
+
+    def get_controler(self):
+        return self.controler
             
