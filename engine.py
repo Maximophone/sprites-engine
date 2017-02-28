@@ -127,11 +127,11 @@ class GraphicEntity(object):
     def get_anim(self):
         pass
         
-    def update(self):
+    def update(self,dt):
         x = self.entity.x
         y = self.entity.y
-        self.x += abs(x-self.x)/(x-self.x)*0.03 if self.x!=x else 0
-        self.y += abs(y-self.y)/(y-self.y)*0.03 if self.y!=y else 0
+        self.x += abs(x-self.x)/(x-self.x)*dt if self.x!=x else 0
+        self.y += abs(y-self.y)/(y-self.y)*dt if self.y!=y else 0
 
 class Camera(object):
 
@@ -247,9 +247,10 @@ class Engine(object):
         return self
         
     def next(self):
+        dt = 1./self.frames
         self._counter+=1
         for graphic_entity in self.graphic_entities:
-            graphic_entity.update()
+            graphic_entity.update(dt)
         if self._counter%self.frames==0:
             self.step+=1
             self.controler.update()
