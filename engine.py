@@ -165,8 +165,14 @@ class GraphicEntity(object):
     def update(self,dt):
         x = self.entity.x
         y = self.entity.y
-        self.x += abs(x-self.x)/(x-self.x)*dt if self.x!=x else 0
-        self.y += abs(y-self.y)/(y-self.y)*dt if self.y!=y else 0
+        if self.x<x-dt or self.x>x+dt:
+            self.x += abs(x-self.x)/(x-self.x)*dt
+        else:
+            self.x = x
+        if self.y<y-dt or self.y>y+dt:
+            self.y += abs(y-self.y)/(y-self.y)*dt
+        else:
+            self.y = y
 
 class Camera(object):
 

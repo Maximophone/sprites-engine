@@ -33,7 +33,7 @@ class MyEventHandler(EventHandler):
         # ipdb.set_trace()
         position = (int(round(event.pos[0]))/self._engine.ratio_x,int(round(event.pos[1]))/self._engine.ratio_y)
         self._engine.get_controler().on_lbutton_down(position)
-
+    
 class MyMap(Map):
     
     def init(self):
