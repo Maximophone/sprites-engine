@@ -21,7 +21,9 @@ class EventHandler(object):
         pass
     def on_mouse_move(self, event):
         pass
-    def on_mouse_wheel(self, event):
+    def on_mouse_wheel_up(self, event):
+        pass
+    def on_mouse_wheel_down(self, event):
         pass
     def on_lbutton_up(self, event):
         pass
@@ -95,7 +97,11 @@ class EventHandler(object):
                 self.on_mbutton_down(event)
             elif event.button == 3:
                 self.on_rbutton_down(event)
- 
+            elif event.button == 4:
+                self.on_mouse_wheel_up(event)
+            elif event.button == 5:
+                self.on_mouse_wheel_down(event)
+                    
         elif event.type == ACTIVEEVENT:
             if event.state == 1:
                 if event.gain:

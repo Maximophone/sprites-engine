@@ -11,12 +11,12 @@ from globalvars import *
 
 from pygame.locals import FULLSCREEN,DOUBLEBUF
 
-def gen_map():
-    ground_map = BinMap(np.random.uniform(size=(MAP_SIZE,MAP_SIZE))<EARTH_DENSITY)
-    ground_map.arr[:,0] = np.zeros((MAP_SIZE,))
-    ground_map.arr[:,-1] = np.zeros((MAP_SIZE,))
-    ground_map.arr[0] = np.zeros((MAP_SIZE,))
-    ground_map.arr[-1,:] = np.zeros((MAP_SIZE,))
+def gen_map(size_x,size_y):
+    ground_map = BinMap(np.random.uniform(size=(size_x,size_y))<EARTH_DENSITY)
+    ground_map.arr[:,0] = np.zeros((size_x,))
+    ground_map.arr[:,-1] = np.zeros((size_x,))
+    ground_map.arr[0] = np.zeros((size_y,))
+    ground_map.arr[-1,:] = np.zeros((size_y,))
 
     return ground_map
 
@@ -28,31 +28,35 @@ def get_surface(ground_map):
 class MyEventHandler(EventHandler):
 
     def on_lbutton_down(self,event):
-        print("LBUTTON_DOWN")
+        # print("LBUTTON_DOWN")
         # import ipdb
         # ipdb.set_trace()
         position = (int(round(event.pos[0]))/self._engine.ratio_x,int(round(event.pos[1]))/self._engine.ratio_y)
         self._engine.get_controler().on_lbutton_down(position)
 
+    def on_mouse_wheel_up(self,event):
+        self._engine.camera.zoom(1.25)
+
+    def on_mouse_wheel_down(self,event):
+        self._engine.camera.zoom(0.8)
+        
     def key_pressed(self,keys):
         if keys[pygame.K_DOWN]:
-            self._engine.camera.move_rel(dpos=(0,0.1))
+            self._engine.camera.move_rel(dpos=(0,0.2))
         if keys[pygame.K_UP]:
-            self._engine.camera.move_rel(dpos=(0,-0.1))
+            self._engine.camera.move_rel(dpos=(0,-0.2))
         if keys[pygame.K_LEFT]:
-            self._engine.camera.move_rel(dpos=(-0.1,0))
+            self._engine.camera.move_rel(dpos=(-0.2,0))
         if keys[pygame.K_RIGHT]:
-            self._engine.camera.move_rel(dpos=(0.1,0))
+            self._engine.camera.move_rel(dpos=(0.2,0))
 
-        if sum(keys)>1:
-            # import ipdb
-            # ipdb.set_trace()
-            print self._engine.camera.rect
-            
+        # if sum(keys)>1:
+        #     # import ipdb
+        #     # ipdb.set_trace()
+        #     print self._engine.camera.rect
 class MyMap(Map):
-    
     def init(self):
-        self.ground_map = gen_map()
+        self.ground_map = gen_map(MAP_SIZE,MAP_SIZE)
         self.ground_map_surface = get_surface(self.ground_map)
 
     def get_map(self,rect):
@@ -113,7 +117,7 @@ if __name__ == '__main__':
     SS = SpriteSheet(GROUNDMAP_SPRITES)
     TILER = Tiler8bit(SS,N_PER_ROW,SIZE,index_dict=GROUNDMAP_TILES_DICT)
 
-    engine = Engine(entities.classes,graphics.classes,MyControler,frames=30,ratio_x=SIZE,ratio_y=SIZE,map=MyMap,event_handler=MyEventHandler,origin_rect=(0,0,MAP_SIZE,MAP_SIZE))
+    engine = Engine(entities.classes,graphics.classes,MyControler,frames=30,ratio_x=SIZE,ratio_y=SIZE,map=MyMap,event_handler=MyEventHandler,origin_rect=ORIGIN_CAMERA)
 
     clock = pygame.time.Clock()
 
@@ -129,8 +133,8 @@ if __name__ == '__main__':
         #     screen.blit(graphic.get_anim().next(),(c_j,c_i))
 
         surface = engine.get_surface()
-
-        screen.blit(surface,(0,0))
+        scaled_surface = pygame.transform.scale(surface,(WINDOW_WIDTH,WINDOW_HEIGHT))
+        screen.blit(scaled_surface,(0,0))
         
         pygame.display.flip()
         clock.tick(60)
