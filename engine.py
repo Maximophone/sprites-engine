@@ -247,7 +247,7 @@ class Engine(object):
     The engine is aware of entity classes and graphics. Provides methods for creation and deletion.
 
     """
-    def __init__(self,entity_classes_dict,graphic_classes_dict,controler_class,frames,ratio_x,ratio_y,map,event_handler,origin_rect,lattice_size=6):
+    def __init__(self,entity_classes_dict,graphic_classes_dict,controler_class,frames,ratio_x,ratio_y,map,event_handler,origin_rect,screen_size,lattice_size=6):
         """
         Args:
         - entity_classes_dict: Dictionary of all the entity classes available to the engine
@@ -258,12 +258,14 @@ class Engine(object):
         - map: Any class that implements the Map class
         - event_handler: Any class that implements the EventHandler class
         - origin_rect: Initial rectangle for game camera
+        - screen_size: size of the screen (width,height)
 
         Kwargs:
         - lattice_size: Size of the lattices used for computing emtity neighbours, in game unit
         """
         self.ratio_x = ratio_x
         self.ratio_y = ratio_y
+        self.screen_size = screen_size
         self._counter = 0
         self.step = 0
         self.frames = frames
@@ -350,12 +352,14 @@ class Engine(object):
         if rect is None:
             rect = self.camera.rect
 
-        return self._get_surface(rect)
+        surface = self._get_surface(rect)
+        scaled_surface = pygame.transform.scale(surface,self.screen_size)
+
+        return scaled_surface
     
     def _get_surface(self,rect):
-        #Problem: we need to solve the duality coordinates in game/coordinates on screen
         map_surface = self.map_._get_surface(rect)
-        for graphic in self._get_graphic_entities_in_rect(rect):
+        for graphic in self._get_graphic_entities_in_rect((rect[0]-1,rect[1]-1,rect[2]+2,rect[3]+2)):
             x = self.ratio_x*(graphic.x-rect[0]) + self.ratio_x/2. - graphic.size[0]/2.
             y = self.ratio_y*(graphic.y-rect[1]) + self.ratio_y/2. - graphic.size[1]/2.
             map_surface.blit(graphic.get_anim().next(),(x,y))
@@ -367,4 +371,11 @@ class Engine(object):
     def get_controler(self):
         return self.controler
     
-            
+    def screen_to_game_coords(self,screen_pos):
+        game_pos = (
+            self.camera._rect[0] + float(screen_pos[1])/self.screen_size[0]*self.camera._rect[2],
+            self.camera._rect[1] + float(screen_pos[0])/self.screen_size[1]*self.camera._rect[3]
+            )
+        return game_pos
+
+

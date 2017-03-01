@@ -5,7 +5,7 @@ from pygame.locals import *
 class EventHandler(object):
 
     def __init__(self,engine):
-        self._engine = engine
+        self.engine = engine
 
     def on_input_focus(self):
         pass
