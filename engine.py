@@ -17,25 +17,31 @@ def _is_point_in_rect(point,rect):
     return True
 
 def _get_chunk_ids(rect,chunk_size):
-    range_x = range(rect[0]%chunk_size,(rect[0]+rect[2])%chunk_size+1)
-    range_y = range(rect[1]%chunk_size,(rect[1]+rect[3])%chunk_size+1)
+    range_x = range(int(rect[0])/chunk_size,int(rect[0]+rect[2])/chunk_size+1)
+    range_y = range(int(rect[1])/chunk_size,int(rect[1]+rect[3])/chunk_size+1)
 
     return [(x,y) for x in range_x for y in range_y]
     
 def _get_chunk_rect(chunk_id,chunk_size):
     return (chunk_id[0]*chunk_size,chunk_id[1]*chunk_size,chunk_size,chunk_size)
 
-def _aggregate_chunks_dict(chunks_dict,chunk_size):
+def _aggregate_chunks_dict(chunks_dict,chunk_size,ratio_x,ratio_y,rect):
     ix = [i[0] for i in chunks_dict.keys()]
     iy = [i[1] for i in chunks_dict.keys()]
 
-    size_x = (max(ix)-min(ix))*chunk_size
-    size_y = (max(iy)-min(iy))*chunk_size
+    size_x = (max(ix)-min(ix)+1)*chunk_size
+    size_y = (max(iy)-min(iy)+1)*chunk_size
     
-    surface = pygame.Surface((size_x,size_y),pygame.SRCALPHA,32).convert()
-
-    for chunk_id,chunk in chunks_dict:
-        surface.blit(chunk,(chunk_id[0]*chunk_size,chunk_id[1]*chunk_size))
+    surface = pygame.Surface(
+        (int(rect[2]*ratio_x),int(rect[3]*ratio_y)),
+        pygame.SRCALPHA,
+        32).convert()
+    for chunk_id,chunk in chunks_dict.items():
+        surface.blit(
+            chunk,
+            (int(chunk_id[0]*chunk_size*ratio_x - rect[0]*ratio_x),
+             int(chunk_id[1]*chunk_size*ratio_y - rect[1]*ratio_y))
+        )
         
     return surface
 
@@ -205,9 +211,10 @@ class Camera(object):
             new_h)
         
 class Map(object):
-    def __init__(self,chunk_size=32):
+    def __init__(self,engine,chunk_size=32):
         self.chunk_size = chunk_size
         self._chunks_cache = {}
+        self._engine = engine
         self.init()
 
     def init(self):
@@ -220,14 +227,14 @@ class Map(object):
         chunk_ids = _get_chunk_ids(rect,self.chunk_size)
         surface_dict = {}
         for chunk_id in chunk_ids:
-            if chunk_id in self._chunks_cache:
-                surface_dict[chunk_id] = self._chunks_cache[chunk_id]
-            else:
+            if chunk_id not in self._chunks_cache:
                 print("Generating chunk {}".format(chunk_id))
                 chunk_rect = _get_chunk_rect(chunk_id,self.chunk_size)
+                print("Chunk rect: {}".format(chunk_rect))
                 chunk = self.get_surface(chunk_rect)
                 self._chunks_cache[chunk_id] = chunk
-        surface = _aggregate_chunks_dict(surface_dict)
+            surface_dict[chunk_id] = self._chunks_cache[chunk_id]
+        surface = _aggregate_chunks_dict(surface_dict,self.chunk_size,self._engine.ratio_x,self._engine.ratio_y,rect)
         return surface
         
 class Engine(object):
@@ -259,7 +266,7 @@ class Engine(object):
         self.graphic_classes_dict = graphic_classes_dict
         self.entities = []
         self.graphic_entities = []
-        self.map_ = map()
+        self.map_ = map(self)
         self.event_handler = event_handler(self)
         self.camera = Camera(self,origin_rect)
         
@@ -342,11 +349,11 @@ class Engine(object):
     
     def _get_surface(self,rect):
         #Problem: we need to solve the duality coordinates in game/coordinates on screen
-        map_surface = self.map_.get_surface(rect)
+        map_surface = self.map_._get_surface(rect)
         for graphic in self._get_graphic_entities_in_rect(rect):
-            x = self.ratio_x*graphic.x + self.ratio_x/2. - graphic.size[0]/2.
-            y = self.ratio_y*graphic.y + self.ratio_y/2. - graphic.size[1]/2.
-            map_surface.blit(graphic.get_anim().next(),(y,x))
+            x = self.ratio_x*(graphic.x-rect[0]) + self.ratio_x/2. - graphic.size[0]/2.
+            y = self.ratio_y*(graphic.y-rect[1]) + self.ratio_y/2. - graphic.size[1]/2.
+            map_surface.blit(graphic.get_anim().next(),(x,y))
         return map_surface
 
     def get_map(self,rect):

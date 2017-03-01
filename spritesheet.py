@@ -162,7 +162,7 @@ class Tiler(object):
             for j,val in enumerate(row):
                 coords = self.index_to_coords(val)
                 tile = self.spritesheet.image_at((coords[0],coords[1],self.size,self.size),colorkey=self.colorkey)
-                surface.blit(tile, (c_j,c_i))
+                surface.blit(tile, (c_i,c_j))
                 c_j+=self.size
             c_i+=self.size
             c_j = 0

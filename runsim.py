@@ -127,3 +127,6 @@ if __name__ == '__main__':
         pygame.display.flip()
         clock.tick(60)
         
+        if not step%30:
+            engine.camera.move_rel(dpos=(0,-0.10))
+            print engine.camera._rect
