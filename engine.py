@@ -1,3 +1,4 @@
+import math
 import pygame
 from pygame.rect import Rect
 import random
@@ -17,8 +18,12 @@ def _is_point_in_rect(point,rect):
     return True
 
 def _get_chunk_ids(rect,chunk_size):
-    range_x = range(int(rect[0])/chunk_size,int(rect[0]+rect[2])/chunk_size+1)
-    range_y = range(int(rect[1])/chunk_size,int(rect[1]+rect[3])/chunk_size+1)
+    range_x = range(
+        int(math.floor(rect[0]))/chunk_size,
+        int(math.ceil(rect[0]+rect[2]))/chunk_size+1)
+    range_y = range(
+        int(math.floor(rect[1]))/chunk_size,
+        int(math.ceil(rect[1]+rect[3]))/chunk_size+1)
 
     return [(x,y) for x in range_x for y in range_y]
     

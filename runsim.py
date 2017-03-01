@@ -36,13 +36,13 @@ class MyEventHandler(EventHandler):
 
     def key_pressed(self,keys):
         if keys[pygame.K_DOWN]:
-            self._engine.camera.move_rel(dpos=(0.1,0))
-        if keys[pygame.K_UP]:
-            self._engine.camera.move_rel(dpos=(-0.1,0))
-        if keys[pygame.K_LEFT]:
-            self._engine.camera.move_rel(dpos=(0,-0.1))
-        if keys[pygame.K_RIGHT]:
             self._engine.camera.move_rel(dpos=(0,0.1))
+        if keys[pygame.K_UP]:
+            self._engine.camera.move_rel(dpos=(0,-0.1))
+        if keys[pygame.K_LEFT]:
+            self._engine.camera.move_rel(dpos=(-0.1,0))
+        if keys[pygame.K_RIGHT]:
+            self._engine.camera.move_rel(dpos=(0.1,0))
 
         if sum(keys)>1:
             # import ipdb
@@ -136,4 +136,4 @@ if __name__ == '__main__':
         clock.tick(60)
         
 
-        engine.camera.move_rel(dpos=(0,-0.01))
+        # engine.camera.move_rel(dpos=(0,-0.01))
