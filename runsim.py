@@ -59,7 +59,15 @@ class MyMap(Map):
         return self.ground_map
             
     def get_surface(self,rect):
-        rect_arr = self.ground_map.arr[rect[0]:rect[0]+rect[2],rect[1]:rect[1]+rect[3]]
+        rect_arr = np.take(
+            np.take(
+                self.ground_map.arr,
+                range(rect[1],rect[1]+rect[3]),
+                axis=1,
+                mode='clip'),
+            range(rect[0],rect[0]+rect[2]),
+            axis=0,
+            mode='clip')
         temp_map = BinMap(rect_arr)
         return TILER.get_surface(temp_map)
 
@@ -127,6 +135,5 @@ if __name__ == '__main__':
         pygame.display.flip()
         clock.tick(60)
         
-        if not step%30:
-            engine.camera.move_rel(dpos=(0,-0.10))
-            print engine.camera._rect
+
+        engine.camera.move_rel(dpos=(0,-0.01))
