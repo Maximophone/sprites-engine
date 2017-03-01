@@ -57,7 +57,6 @@ class MyEventHandler(EventHandler):
 class MyMap(Map):
     def init(self):
         self.ground_map = gen_map(MAP_SIZE,MAP_SIZE)
-        self.ground_map_surface = get_surface(self.ground_map)
 
     def get_map(self,rect):
         return self.ground_map
