@@ -46,14 +46,15 @@ class MyEventHandler(EventHandler):
         self.engine.camera.zoom(1.25)
         
     def key_pressed(self,keys):
+        relative_move = self.engine.camera.rect[2]/60.
         if keys[pygame.K_DOWN]:
-            self.engine.camera.move_rel(dpos=(0,0.2))
+            self.engine.camera.move_rel(dpos=(0,relative_move))
         if keys[pygame.K_UP]:
-            self.engine.camera.move_rel(dpos=(0,-0.2))
+            self.engine.camera.move_rel(dpos=(0,-relative_move))
         if keys[pygame.K_LEFT]:
-            self.engine.camera.move_rel(dpos=(-0.2,0))
+            self.engine.camera.move_rel(dpos=(-relative_move,0))
         if keys[pygame.K_RIGHT]:
-            self.engine.camera.move_rel(dpos=(0.2,0))
+            self.engine.camera.move_rel(dpos=(relative_move,0))
 
 class MyMap(Map):
     def init(self):
