@@ -14,6 +14,8 @@ from pygame.locals import FULLSCREEN,DOUBLEBUF
 
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (1200,0)
 
+np.random.seed(0)
+
 def gen_map(size_x,size_y):
     ground_map = BinMap(np.random.uniform(size=(size_x,size_y))<EARTH_DENSITY)
     ground_map.arr[:,0] = np.zeros((size_x,))
@@ -35,10 +37,13 @@ class MyEventHandler(EventHandler):
         self.engine.get_controler().on_lbutton_down((int(position[0]),int(position[1])))
 
     def on_mouse_wheel_up(self,event):
-        self.engine.camera.zoom(1.25)
+        self.engine.camera.zoom(0.8)
 
     def on_mouse_wheel_down(self,event):
-        self.engine.camera.zoom(0.8)
+        if self.engine.camera.rect[2]>64:
+            print "max zoom"
+            return
+        self.engine.camera.zoom(1.25)
         
     def key_pressed(self,keys):
         if keys[pygame.K_DOWN]:
@@ -62,10 +67,10 @@ class MyMap(Map):
             np.take(
                 self.ground_map.arr,
                 range(rect[1],rect[1]+rect[3]),
-                axis=1,
+                axis=0,
                 mode='clip'),
             range(rect[0],rect[0]+rect[2]),
-            axis=0,
+            axis=1,
             mode='clip')
         temp_map = BinMap(rect_arr)
         return TILER.get_surface(temp_map)
@@ -100,7 +105,7 @@ class MyControler(Controler):
             self.slimes.append(self.new_entity("Slime",self.hive.x,self.hive.y,self.ground_map))
 
     def on_lbutton_down(self,position):
-        roach = self.new_entity("Roach",position[1],position[0],self.ground_map)
+        roach = self.new_entity("Roach",position[0],position[1],self.ground_map)
         self.roaches.append(roach)
 
 if __name__ == '__main__':

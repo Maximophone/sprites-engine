@@ -137,13 +137,13 @@ class Entity(object):
     def move(self,dir):
         assert dir in (0,1,2,3,4), "Invalid direction"
         if dir==Dirs.SOUTH:
-            self.x+=1
-        elif dir==Dirs.WEST:
-            self.y-=1
-        elif dir==Dirs.NORTH:
-            self.x-=1
-        elif dir==Dirs.EAST:
             self.y+=1
+        elif dir==Dirs.WEST:
+            self.x-=1
+        elif dir==Dirs.NORTH:
+            self.y-=1
+        elif dir==Dirs.EAST:
+            self.x+=1
         else:
             return
         self.orientation = dir
@@ -236,7 +236,20 @@ class Map(object):
                 print("Generating chunk {}".format(chunk_id))
                 chunk_rect = _get_chunk_rect(chunk_id,self.chunk_size)
                 print("Chunk rect: {}".format(chunk_rect))
-                chunk = self.get_surface(chunk_rect)
+                oversized_chunk = self.get_surface((
+                    chunk_rect[0]-1,
+                    chunk_rect[1]-1,
+                    chunk_rect[2]+2,
+                    chunk_rect[3]+2))
+                chunk = pygame.Surface((
+                    self.chunk_size*self._engine.ratio_x,
+                    self.chunk_size*self._engine.ratio_y))
+                chunk.blit(oversized_chunk,(0,0),(
+                    self._engine.ratio_x,
+                    self._engine.ratio_y,
+                    self.chunk_size*self._engine.ratio_x,
+                    self.chunk_size*self._engine.ratio_y))
+
                 self._chunks_cache[chunk_id] = chunk
             surface_dict[chunk_id] = self._chunks_cache[chunk_id]
         surface = _aggregate_chunks_dict(surface_dict,self.chunk_size,self._engine.ratio_x,self._engine.ratio_y,rect)
@@ -373,8 +386,8 @@ class Engine(object):
     
     def screen_to_game_coords(self,screen_pos):
         game_pos = (
-            self.camera._rect[0] + float(screen_pos[1])/self.screen_size[0]*self.camera._rect[2],
-            self.camera._rect[1] + float(screen_pos[0])/self.screen_size[1]*self.camera._rect[3]
+            self.camera._rect[0] + float(screen_pos[0])/self.screen_size[0]*self.camera._rect[2],
+            self.camera._rect[1] + float(screen_pos[1])/self.screen_size[1]*self.camera._rect[3]
             )
         return game_pos
 
