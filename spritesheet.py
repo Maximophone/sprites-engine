@@ -14,8 +14,10 @@ class SpriteSheet(object):
 
         self._cache = {}
 
-    def image_at(self, rectangle, colorkey = None):
+    def image_at(self, rectangle, size=None, colorkey = None):
         "Loads image from x,y,x+w,y+h"
+        if size is not None:
+            rectangle = (rectangle[0]*size+rectangle[0]*self.interval,rectangle[1]*size+rectangle[1]*self.interval,size,size)
         if rectangle in self._cache:
             return self._cache[rectangle]
         rect = pygame.Rect(
