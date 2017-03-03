@@ -46,7 +46,9 @@ class SpriteSheet(object):
 
 class SpriteStripAnim(object):
 
-    def __init__(self, filename, rect, count, colorkey=None, loop=False, frames=1, vertical=False):
+    def __init__(self, filename, rect, count, size = None, colorkey=None, loop=False, frames=1, vertical=False):
+        if size is not None:
+            rect = (rect[0]*size,rect[1]*size,size,size)
         self.filename = filename
         ss = SpriteSheet(filename)
         self.images = ss.load_strip(rect, count, colorkey, vertical=vertical)
