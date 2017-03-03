@@ -12,12 +12,19 @@ from globalvars import *
 
 from pygame.locals import FULLSCREEN,DOUBLEBUF
 
+from scipy.ndimage.filters import gaussian_filter
+
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (1200,0)
 
-np.random.seed(0)
+# np.random.seed(0)
+# random.seed(0)
 
 def gen_map(size_x,size_y):
-    ground_map = BinMap(np.random.uniform(size=(size_x,size_y))<EARTH_DENSITY)
+    arr = np.random.uniform(size=(size_x,size_y))
+    blurred = gaussian_filter(arr, sigma=3)
+
+
+    ground_map = BinMap(blurred<0.5)
     ground_map.arr[:,0] = np.zeros((size_x,))
     ground_map.arr[:,-1] = np.zeros((size_x,))
     ground_map.arr[0] = np.zeros((size_y,))
@@ -37,6 +44,9 @@ class MyEventHandler(EventHandler):
         self.engine.get_controler().on_lbutton_down((int(position[0]),int(position[1])))
 
     def on_mouse_wheel_up(self,event):
+        if self.engine.camera.rect[2]<8:
+            print "min zoom"
+            return
         self.engine.camera.zoom(0.8)
 
     def on_mouse_wheel_down(self,event):
@@ -79,36 +89,46 @@ class MyMap(Map):
 class MyControler(Controler):
 
     def  init(self):
-
+        self.to_remove = []
         self.ground_map = self.engine.get_map(None)
         possible_indices = self.ground_map.get_indices_ones()
 
-        self.slimes = []
-        self.grass_ = []
-        self.roaches = []
+        self.slimes = set()
+        self.grass_ = set()
+        self.roaches = set()
 
         for _ in range(N_GRASS):
-            start_x,start_y = random.choice(possible_indices)
+            start_y,start_x = random.choice(possible_indices)
             grass = self.new_entity("Grass",start_x,start_y)
-            self.grass_.append(grass)
+            self.grass_.add(grass)
 
         for _ in range(N_ROACHES):
-            start_x,start_y = random.choice(possible_indices)
+            start_y,start_x = random.choice(possible_indices)
             roach = self.new_entity("Roach",start_x,start_y,self.ground_map)
-            self.roaches.append(roach)
+            self.roaches.add(roach)
 
-        hive_x,hive_y = random.choice(possible_indices)
+        hive_y,hive_x = random.choice(possible_indices)
         self.hive = self.new_entity("Hive",hive_x,hive_y)
 
 
     def update(self):
+        for entity in self.to_remove:
+            self.engine.delete_entity(entity)
+            self.slimes.discard(entity)
+            self.grass_.discard(entity)
+            self.roaches.discard(entity)
+        self.to_remove = []
+            
         if self.engine.step in [x*15+1 for x in range(20)]:
-            self.slimes.append(self.new_entity("Slime",self.hive.x,self.hive.y,self.ground_map))
+            self.slimes.add(self.new_entity("Slime",self.hive.x,self.hive.y,self.ground_map))
 
     def on_lbutton_down(self,position):
         roach = self.new_entity("Roach",position[0],position[1],self.ground_map)
-        self.roaches.append(roach)
+        self.roaches.add(roach)
 
+    def plan_remove_entity(self,entity):
+        self.to_remove.append(entity)
+        
 if __name__ == '__main__':
 
     pygame.init()

@@ -6,12 +6,22 @@ from generic import Generic_Graphic
 class Slime_Graphic(Generic_Graphic):
     def __init__(self,entity):
         super(Slime_Graphic,self).__init__(entity)
+        ALIVE = 1
+        DEAD = 0
         self.anims = {
-                Dirs.EAST:SpriteStripAnim(ENTITIES_SPRITES,(5*SIZE_ANIM,3*SIZE_ANIM,SIZE_ANIM,SIZE_ANIM),4,loop=True,frames=6),
-                Dirs.NORTH:SpriteStripAnim(ENTITIES_SPRITES,(5*SIZE_ANIM,4*SIZE_ANIM,SIZE_ANIM,SIZE_ANIM),4,loop=True,frames=6),
-                Dirs.WEST:SpriteStripAnim(ENTITIES_SPRITES,(5*SIZE_ANIM,5*SIZE_ANIM,SIZE_ANIM,SIZE_ANIM),4,loop=True,frames=6),
-                Dirs.SOUTH:SpriteStripAnim(ENTITIES_SPRITES,(5*SIZE_ANIM,6*SIZE_ANIM,SIZE_ANIM,SIZE_ANIM),4,loop=True,frames=6),
+            ALIVE:{
+                Dirs.EAST:SpriteStripAnim(ENTITIES_SPRITES,(5,3),4,size=SIZE_ANIM,loop=True,frames=6),
+                Dirs.NORTH:SpriteStripAnim(ENTITIES_SPRITES,(5,4),4,size=SIZE_ANIM,loop=True,frames=6),
+                Dirs.WEST:SpriteStripAnim(ENTITIES_SPRITES,(5,5),4,size=SIZE_ANIM,loop=True,frames=6),
+                Dirs.SOUTH:SpriteStripAnim(ENTITIES_SPRITES,(5,6),4,size=SIZE_ANIM,loop=True,frames=6),
+                },
+            DEAD:{
+                Dirs.EAST:SpriteStripAnim(ENTITIES_SPRITES,(5,14),1,size=SIZE_ANIM,loop=True,frames=6),
+                Dirs.NORTH:SpriteStripAnim(ENTITIES_SPRITES,(5,13),1,size=SIZE_ANIM,loop=True,frames=6),
+                Dirs.WEST:SpriteStripAnim(ENTITIES_SPRITES,(5,12),1,size=SIZE_ANIM,loop=True,frames=6),
+                Dirs.SOUTH:SpriteStripAnim(ENTITIES_SPRITES,(5,11),1,size=SIZE_ANIM,loop=True,frames=6),
                 }
+            }
 
     def get_anim(self):
-        return self.anims[self.entity.orientation]
+        return self.anims[self.entity.alive][self.entity.orientation]

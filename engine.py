@@ -284,8 +284,8 @@ class Engine(object):
         self.frames = frames
         self.entity_classes_dict = entity_classes_dict
         self.graphic_classes_dict = graphic_classes_dict
-        self.entities = []
-        self.graphic_entities = []
+        self.entities = set()
+        self.graphic_entities = {}
         self.map_ = map(self)
         self.event_handler = event_handler(self)
         self.camera = Camera(self,origin_rect)
@@ -315,7 +315,7 @@ class Engine(object):
 
         self.event_handler.mouse_pressed(pygame.mouse.get_pressed(),pygame.mouse.get_pos())
         
-        for graphic_entity in self.graphic_entities:
+        for graphic_entity in self.graphic_entities.values():
             graphic_entity.update(dt)
         if self._counter%self.frames==0:
             self.step+=1
@@ -330,7 +330,7 @@ class Engine(object):
         entity_constructor = self.entity_classes_dict[clazz]
         entity = entity_constructor(self,x,y)
 
-        self.entities.append(entity)
+        self.entities.add(entity)
         self.position_to_entities.setdefault((x,y),set())
         self.position_to_entities[(x,y)].add(entity)
 
@@ -341,9 +341,19 @@ class Engine(object):
         graphic_clazz = clazz + "_Graphic"
         if graphic_clazz in self.graphic_classes_dict:
             graphic_entity = self.graphic_classes_dict[graphic_clazz](entity)
-            self.graphic_entities.append(graphic_entity)
+            self.graphic_entities[entity] = graphic_entity
         return entity
 
+    def delete_entity(self,entity):
+        self.position_to_entities[(entity.x,entity.y)].remove(entity)
+
+        self.multi_lattice.remove(entity.x,entity.y,entity)
+
+        self.entities.remove(entity)
+
+        self.graphic_entities.pop(entity)
+        
+        
     def update_position(self,entity,x,y):
 
         self.position_to_entities[(entity.x,entity.y)].remove(entity)
@@ -359,7 +369,7 @@ class Engine(object):
         return self.multi_lattice.get(entity.x,entity.y)
 
     def _get_graphic_entities_in_rect(self,rect):
-        return [graphic for graphic in self.graphic_entities if _is_point_in_rect((graphic.x,graphic.y),rect)]
+        return [graphic for graphic in self.graphic_entities.values() if _is_point_in_rect((graphic.x,graphic.y),rect)]
 
     def get_surface(self,rect=None):
         if rect is None:
