@@ -96,7 +96,6 @@ class MultiLattice(object):
 class Controler(object):
     def __init__(self,engine):
         self.engine = engine
-        self.init()
 
     def init(self):
         pass
@@ -299,6 +298,7 @@ class Engine(object):
         self.multi_lattice = MultiLattice(lattice1,lattice2,lattice3,lattice4)
 
         self.controler = controler_class(self)
+        self.controler.init()
         
     def __iter__(self):
         return self

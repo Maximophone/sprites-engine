@@ -1,18 +1,18 @@
 import random
 from engine import Entity
+from generic import GenericAging
 
-class Roach(Entity):
+class Roach(GenericAging):
     clazz = 'roach'
 
     def init(self,ground_map):
-        self.ground_map = ground_map
+        death_age = random.randint(120,150)
+        delete_age = death_age + 10
+        super(Roach,self).init(ground_map,death_age,delete_age)
 
     def update(self):
-        _,dirs = self.ground_map.get_val_and_direct_neighbours(self.x,self.y)
-        possible_dirs = [i for i,x in enumerate(dirs) if x==1]
-        if not possible_dirs:
-            possible_dirs = [4]
-        d = random.choice(possible_dirs)
-        self.move(d)
-
-        neighbours = self.get_neighbours()
+        self.resolve_age()
+        if self.alive:
+            possible_dirs = self.get_dirs()
+            d = random.choice(possible_dirs)
+            self.move(d)
