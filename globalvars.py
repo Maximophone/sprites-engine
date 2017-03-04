@@ -11,7 +11,7 @@ MAP_SIZE = 128
 EARTH_DENSITY = 0.8
 
 ENTITIES_SPRITES = "critters.png"
-GROUNDMAP_SPRITES = 'GroundMap.png'
+GROUNDMAP_SPRITES = "marching-tiles-large-new.png"
 
 GRASS_GROWTH_RATE = 0.01
 N_SLIMES = 16

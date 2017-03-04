@@ -4,6 +4,7 @@ from engine import *
 import pygame
 import numpy as np
 import random
+from marching_squares import MSMap,MarchingSquaresTiler
 
 import entities
 import graphics
@@ -20,20 +21,34 @@ os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (1200,0)
 # random.seed(0)
 
 def gen_map(size_x,size_y):
-    arr = np.random.uniform(size=(size_x,size_y))
-    blurred = gaussian_filter(arr, sigma=3)
+    arr = np.random.uniform(0,1,size=(size_x,size_y))
+    arr[:,0] = np.zeros((size_x,))
+    arr[:,-1] = np.zeros((size_x,))
+    arr[0] = np.zeros((size_y,))
+    arr[-1,:] = np.zeros((size_y,))
 
+    arr[:,1] = np.zeros((size_x,))
+    arr[:,-2] = np.zeros((size_x,))
+    arr[1] = np.zeros((size_y,))
+    arr[-2,:] = np.zeros((size_y,))
 
-    ground_map = BinMap(blurred<0.5)
-    ground_map.arr[:,0] = np.zeros((size_x,))
-    ground_map.arr[:,-1] = np.zeros((size_x,))
-    ground_map.arr[0] = np.zeros((size_y,))
-    ground_map.arr[-1,:] = np.zeros((size_y,))
+    arr = gaussian_filter(arr,sigma=2)
+   
+    arr = (arr-arr.min())/(arr.max()-arr.min())
 
+    arr = (arr*7).astype(int)
+
+    arr[:,0] = np.zeros((size_x,))
+    arr[:,-1] = np.zeros((size_x,))
+    arr[0] = np.zeros((size_y,))
+    arr[-1,:] = np.zeros((size_y,))
+    
+    ground_map = MSMap(arr)
+    
     return ground_map
 
 def get_surface(ground_map):
-    ground_map_surface = TILER.get_surface(ground_map)
+    ground_map_surface = TILER.get_surface(ground_map.corners)
 
     return ground_map_surface
 
@@ -76,22 +91,24 @@ class MyMap(Map):
     def get_surface(self,rect):
         rect_arr = np.take(
             np.take(
-                self.ground_map.arr,
-                range(rect[1],rect[1]+rect[3]),
+                self.ground_map.corners,
+                range(rect[1],rect[1]+rect[3]+1),
                 axis=0,
                 mode='clip'),
-            range(rect[0],rect[0]+rect[2]),
+            range(rect[0],rect[0]+rect[2]+1),
             axis=1,
             mode='clip')
-        temp_map = BinMap(rect_arr)
-        return TILER.get_surface(temp_map)
+        return TILER.get_surface(rect_arr)
 
+def is_tile_passable(arr):
+    return (arr == 1) | (arr == 2)
+    
 class MyControler(Controler):
 
     def  init(self):
         self.to_remove = []
         self.ground_map = self.engine.get_map(None)
-        possible_indices = self.ground_map.get_indices_ones()
+        possible_indices = self.ground_map.get_indices_filter(is_tile_passable)
 
         self.slimes = set()
         self.grass_ = set()
@@ -136,7 +153,8 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode((WINDOW_WIDTH,WINDOW_HEIGHT))
 
     SS = SpriteSheet(GROUNDMAP_SPRITES)
-    TILER = Tiler8bit(SS,N_PER_ROW,SIZE,index_dict=GROUNDMAP_TILES_DICT)
+    #    TILER = Tiler8bit(SS,N_PER_ROW,SIZE,index_dict=GROUNDMAP_TILES_DICT)
+    TILER = MarchingSquaresTiler(SS,0,SIZE)
 
     engine = Engine(
         entities.classes,

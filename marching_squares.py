@@ -28,6 +28,23 @@ def corners_to_tile_id(vTL,vTR,vBL,vBR):
 
     return tile_id, row, col
 
+def corners_to_values(vTL,vTR,vBL,vBR):
+    """Generates inner values from corners"""
+    hTL = vTL>>1
+    hTR = vTR>>1
+    hBL = vBL>>1
+    hBR = vBR>>1
+
+    value = (hTL + hTR + hBL + hBL) >> 2
+
+    return value
+
+def v_corners_to_values(row):
+    return corners_to_values(*row)
+
+def corners_array_to_values(arr):
+    return np.apply_along_axis(v_corners_to_values,2,array_reshape(arr))
+    
 def vfunc(row):
     return corners_to_tile_id(*row)
 
@@ -86,3 +103,25 @@ class MarchingSquaresTiler(object):
                 surface.blit(tile, (j*self.size,i*self.size))
 
         return surface
+
+class MSMap(object):
+    def __init__(self,arr):
+        """Marching Squares map."""
+        self.corners = arr
+        self.values = corners_array_to_values(arr)
+        self.h = len(self.values)
+        self.w = len(self.values[0]) if self.h else 0
+        
+    def get_values(self):
+        return self.values
+
+    def get_val_and_direct_neighbours(self,x,y):
+        arr,h,w = self.values,self.h,self.w
+        n = arr[(y-1)%h][x]
+        e = arr[y][(x+1)%w]
+        s = arr[(y+1)%h][x]
+        w_ = arr[y][(x-1)%w]
+        return arr[y][x],[s,w_,n,e]
+
+    def get_indices_filter(self,filter):
+        return zip(*np.where(filter(self.values)))

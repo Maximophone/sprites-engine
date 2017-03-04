@@ -207,3 +207,4 @@ class BinMap(object):
         for i,row in enumerate(self.arr):
             for j,val in enumerate(row):
                 yield self.get_val_and_neighbours(i,j)
+
