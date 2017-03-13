@@ -15,36 +15,15 @@ from pygame.locals import FULLSCREEN,DOUBLEBUF
 
 from scipy.ndimage.filters import gaussian_filter
 
+from mapgen import gen_map_arr
+
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (1200,0)
 
-# np.random.seed(0)
-# random.seed(0)
 
 def gen_map(size_x,size_y):
-    arr = np.random.uniform(0,1,size=(size_x,size_y))
-    arr[:,0] = np.zeros((size_x,))
-    arr[:,-1] = np.zeros((size_x,))
-    arr[0] = np.zeros((size_y,))
-    arr[-1,:] = np.zeros((size_y,))
-
-    arr[:,1] = np.zeros((size_x,))
-    arr[:,-2] = np.zeros((size_x,))
-    arr[1] = np.zeros((size_y,))
-    arr[-2,:] = np.zeros((size_y,))
-
-    arr = gaussian_filter(arr,sigma=2)
-   
-    arr = (arr-arr.min())/(arr.max()-arr.min())
-
-    arr = (arr*7).astype(int)
-
-    arr[:,0] = np.zeros((size_x,))
-    arr[:,-1] = np.zeros((size_x,))
-    arr[0] = np.zeros((size_y,))
-    arr[-1,:] = np.zeros((size_y,))
-    
+    arr = gen_map_arr(size_x,size_y,factor=8)
     ground_map = MSMap(arr)
-    
+
     return ground_map
 
 def get_surface(ground_map):
