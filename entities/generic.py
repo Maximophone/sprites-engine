@@ -8,7 +8,7 @@ class GenericEntity(Entity):
 
     def get_dirs(self):
         _,dirs = self.ground_map.get_val_and_direct_neighbours(self.x,self.y)
-        possible_dirs = [i for i,x in enumerate(dirs) if x==1 or x==2]
+        possible_dirs = [i for i,x in enumerate(dirs) if x>=2 and x<=5]
         if not possible_dirs:
             possible_dirs = [4]
         return possible_dirs

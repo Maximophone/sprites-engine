@@ -28,7 +28,7 @@ def corners_to_tile_id(vTL,vTR,vBL,vBR):
 
     return tile_id, row, col
 
-def corners_to_values(vTL,vTR,vBL,vBR):
+def corners_to_hvalues(vTL,vTR,vBL,vBR):
     """Generates inner values from corners"""
     hTL = vTL>>1
     hTR = vTR>>1
@@ -36,6 +36,18 @@ def corners_to_values(vTL,vTR,vBL,vBR):
     hBR = vBR>>1
 
     value = (hTL + hTR + hBL + hBL) >> 2
+
+    return value
+
+def v_corners_to_hvalues(row):
+    return corners_to_hvalues(*row)
+
+def corners_array_to_hvalues(arr):
+    return np.apply_along_axis(v_corners_to_hvalues,2,array_reshape(arr))
+    
+def corners_to_values(vTL,vTR,vBL,vBR):
+    """Generates inner values from corners"""
+    value = (vTL + vTR + vBL + vBL) >> 2
 
     return value
 
@@ -108,6 +120,7 @@ class MSMap(object):
     def __init__(self,arr):
         """Marching Squares map."""
         self.corners = arr
+        self.hvalues = corners_array_to_hvalues(arr)
         self.values = corners_array_to_values(arr)
         self.h = len(self.values)
         self.w = len(self.values[0]) if self.h else 0

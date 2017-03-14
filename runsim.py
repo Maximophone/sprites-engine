@@ -80,7 +80,7 @@ class MyMap(Map):
         return TILER.get_surface(rect_arr)
 
 def is_tile_passable(arr):
-    return (arr == 1) | (arr == 2)
+    return (arr >= 2) & (arr <= 5) 
     
 class MyControler(Controler):
 
