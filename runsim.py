@@ -21,7 +21,7 @@ os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (1200,0)
 
 
 def gen_map(size_x,size_y):
-    arr = gen_map_arr(size_x,size_y,factor=8)
+    arr = gen_map_arr(size_x,size_y,factor=MAP_INTERPOLATION_FACTOR)
     ground_map = MSMap(arr)
 
     return ground_map
